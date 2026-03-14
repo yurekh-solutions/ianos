@@ -34,7 +34,7 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
   const { workflows, updateWorkflow, addExecution } = useWorkflowStore();
   const workflow = workflows.find((w) => w.id === workflowId);
   
-  const [nodes, setNodes, onNodesChange] = useNodesState(
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>(
     workflow?.nodes.map((n) => ({
       id: n.id,
       type: 'workflowNode',
@@ -43,7 +43,7 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
     })) || []
   );
   
-  const [edges, setEdges, onEdgesChange] = useEdgesState(
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(
     workflow?.edges.map((e) => ({
       id: e.id,
       source: e.source,
@@ -162,7 +162,7 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
           <MiniMap
             className="glass-card !border-none"
             nodeColor={(node) => {
-              return node.data?.color || '#6366f1';
+              return (node.data?.color as string) || '#6366f1';
             }}
             maskColor="rgba(0,0,0,0.5)"
           />
@@ -229,7 +229,7 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
               onClose={() => setShowPalette(false)}
               workflowId={workflowId}
               onNodeAdd={(node) => {
-                setNodes((nds) => [...nds, node]);
+                setNodes((nds) => [...nds, node as Node]);
                 setShowPalette(false);
               }}
             />
