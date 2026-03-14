@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Building2, Mail, Phone, MapPin, Globe, CreditCard, Save, Upload, CheckCircle2 } from 'lucide-react';
+import { Building2, Mail, Phone, MapPin, Globe, CreditCard, Save, Upload, CheckCircle2, X, Image as ImageIcon } from 'lucide-react';
+import Image from 'next/image';
 
 interface CompanyData {
   name: string;
@@ -16,16 +17,19 @@ interface CompanyData {
   bankName: string;
   bankAccount: string;
   bankRouting: string;
+  logoUrl: string;
 }
 
 export default function CompanyPage() {
   const [company, setCompany] = useState<CompanyData>({
     name: '', email: '', phone: '', address: '', city: '', country: '',
-    website: '', taxId: '', bankName: '', bankAccount: '', bankRouting: '',
+    website: '', taxId: '', bankName: '', bankAccount: '', bankRouting: '', logoUrl: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { fetchCompany(); }, []);
 
@@ -60,6 +64,49 @@ export default function CompanyPage() {
       console.error('Error:', error);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('File size must be less than 2MB');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64 = event.target?.result as string;
+        setCompany(prev => ({ ...prev, logoUrl: base64 }));
+        setUploading(false);
+      };
+      reader.onerror = () => {
+        alert('Error reading file');
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      setUploading(false);
+    }
+  };
+
+  const removeLogo = () => {
+    setCompany(prev => ({ ...prev, logoUrl: '' }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -103,15 +150,34 @@ export default function CompanyPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
             className="rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-4 md:p-6">
             <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-emerald-400" /> Company Logo
+              <ImageIcon className="w-4 h-4 text-emerald-400" /> Company Logo
             </h2>
             <div className="flex flex-col sm:flex-row items-center gap-4">
-              <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
-                <Building2 className="w-10 h-10 text-white" />
+              <div className="relative">
+                <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-600/20 border-2 border-dashed border-white/20 flex items-center justify-center shadow-lg overflow-hidden">
+                  {company.logoUrl ? (
+                    <Image src={company.logoUrl} alt="Company Logo" fill className="object-cover" unoptimized />
+                  ) : (
+                    <Building2 className="w-10 h-10 text-white/40" />
+                  )}
+                </div>
+                {company.logoUrl && (
+                  <button type="button" onClick={removeLogo}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-colors shadow-lg">
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
               </div>
               <div className="text-center sm:text-left">
-                <button type="button" className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm hover:bg-white/10 transition-colors flex items-center gap-2 mx-auto sm:mx-0">
-                  <Upload className="w-4 h-4" /> Upload Logo
+                <input type="file" ref={fileInputRef} onChange={handleLogoUpload} accept="image/*" className="hidden" />
+                <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                  className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm hover:bg-white/10 transition-colors flex items-center gap-2 mx-auto sm:mx-0 disabled:opacity-50">
+                  {uploading ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Upload className="w-4 h-4" />
+                  )}
+                  {uploading ? 'Uploading...' : company.logoUrl ? 'Change Logo' : 'Upload Logo'}
                 </button>
                 <p className="text-white/40 text-xs mt-2">PNG, JPG up to 2MB</p>
               </div>
