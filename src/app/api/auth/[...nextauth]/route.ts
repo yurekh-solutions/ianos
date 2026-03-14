@@ -11,12 +11,11 @@ const handler = NextAuth({
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       if (account?.provider === 'google') {
         await connectDB();
-        
+
         const existingUser = await User.findOne({ email: user.email });
-        
         if (!existingUser) {
           // Create new user
           await User.create({
@@ -27,16 +26,15 @@ const handler = NextAuth({
             role: 'user',
           });
         }
-        
+
         return true;
       }
       return false;
     },
-    async session({ session, token }) {
+    async session({ session }) {
       if (session.user?.email) {
         await connectDB();
         const dbUser = await User.findOne({ email: session.user.email });
-        
         if (dbUser) {
           session.user.id = dbUser._id.toString();
           session.user.role = dbUser.role;
@@ -45,7 +43,7 @@ const handler = NextAuth({
       }
       return session;
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
       }
