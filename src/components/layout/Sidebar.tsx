@@ -4,32 +4,33 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { useSession, signOut } from 'next-auth/react';
 import {
   LayoutDashboard,
   Workflow,
   FileText,
   Users,
   Settings,
-  CreditCard,
-  BarChart3,
+  Package,
   ChevronLeft,
   ChevronRight,
   Zap,
+  LogOut,
 } from 'lucide-react';
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
-  { icon: Workflow, label: 'Workflows', href: '/workflows' },
   { icon: FileText, label: 'Invoices', href: '/invoices' },
   { icon: Users, label: 'Customers', href: '/customers' },
-  { icon: BarChart3, label: 'Reports', href: '/reports' },
-  { icon: CreditCard, label: 'Billing', href: '/billing' },
+  { icon: Package, label: 'Products', href: '/products' },
+  { icon: Workflow, label: 'Workflows', href: '/workflows' },
   { icon: Settings, label: 'Settings', href: '/settings' },
 ];
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   return (
     <motion.aside
@@ -102,22 +103,31 @@ export function Sidebar() {
       </button>
 
       {/* User Profile */}
-      <div className="p-4 border-t border-white/10">
+      <div className="p-4 border-t border-white/10 space-y-2">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-semibold text-sm">Y</span>
+            <span className="text-white font-semibold text-sm">
+              {session?.user?.name?.[0] || 'U'}
+            </span>
           </div>
           {!collapsed && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="min-w-0"
+              className="min-w-0 flex-1"
             >
-              <p className="text-white font-medium text-sm truncate">Ianos Admin</p>
-              <p className="text-white/50 text-xs truncate">admin@ianos.com</p>
+              <p className="text-white font-medium text-sm truncate">{session?.user?.name || 'User'}</p>
+              <p className="text-white/50 text-xs truncate">{session?.user?.email || ''}</p>
             </motion.div>
           )}
         </div>
+        <button
+          onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+          className={`flex items-center gap-3 px-4 py-2 rounded-xl text-white/60 hover:bg-white/5 hover:text-white transition-all w-full ${collapsed ? 'justify-center' : ''}`}
+        >
+          <LogOut className="w-5 h-5 flex-shrink-0" />
+          {!collapsed && <span className="text-sm font-medium">Sign Out</span>}
+        </button>
       </div>
     </motion.aside>
   );
