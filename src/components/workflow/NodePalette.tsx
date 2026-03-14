@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { X, Search, Play, Clock, Webhook, Mail, FileText, Send, Bell, CreditCard, BarChart3, User, UserPlus, GitBranch, Timer, Globe, Table } from 'lucide-react';
 import { useWorkflowStore } from '@/store/workflowStore';
@@ -22,7 +22,7 @@ export function NodePalette({ onClose, workflowId, onNodeAdd }: NodePaletteProps
   const { nodeTypes, addNode } = useWorkflowStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [nodeCounter, setNodeCounter] = useState(0);
+  const nodeCounterRef = useRef(0);
 
   const categories = Array.from(new Set(nodeTypes.map((nt) => nt.category)));
 
@@ -34,12 +34,11 @@ export function NodePalette({ onClose, workflowId, onNodeAdd }: NodePaletteProps
   });
 
   const handleAddNode = (nodeType: typeof nodeTypes[0]) => {
-    const newCounter = nodeCounter + 1;
-    setNodeCounter(newCounter);
-    const nodeId = `${nodeType.type}-${newCounter}`;
+    nodeCounterRef.current += 1;
+    const nodeId = `${nodeType.type}-${nodeCounterRef.current}`;
     // Position nodes in the left area, away from the config panel (which is on the right)
-    const posX = 100 + ((newCounter * 60) % 250);
-    const posY = 150 + ((newCounter * 50) % 250);
+    const posX = 100 + ((nodeCounterRef.current * 60) % 250);
+    const posY = 150 + ((nodeCounterRef.current * 50) % 250);
     
     const newNodeData = {
       label: nodeType.label,
