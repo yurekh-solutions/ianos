@@ -60,12 +60,12 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      const edge: Edge = {
+      const edge = {
         ...connection,
         id: `e${connection.source}-${connection.target}`,
         animated: true,
         style: { stroke: '#6366f1', strokeWidth: 2 },
-      };
+      } as Edge;
       setEdges((eds) => addEdge(edge, eds));
       
       // Update store
