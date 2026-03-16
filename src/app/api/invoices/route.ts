@@ -96,9 +96,10 @@ export async function POST(req: NextRequest) {
     const taxTotal = items.reduce((sum: number, item: { taxAmount: number }) => sum + item.taxAmount, 0);
     const totalAmount = subtotal + taxTotal;
 
-    // Generate invoice number
-    const invoiceCount = await Invoice.countDocuments({ companyId: user.companyId });
-    const invoiceNumber = `INV-${String(invoiceCount + 1).padStart(4, '0')}`;
+    // Generate unique invoice number based on timestamp
+    const timestamp = Date.now();
+    const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const invoiceNumber = `INV-${timestamp}-${randomSuffix}`;
 
     const invoice = await Invoice.create({
       companyId: user.companyId,
