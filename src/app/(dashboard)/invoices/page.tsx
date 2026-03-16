@@ -328,29 +328,58 @@ export default function InvoicesPage() {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
-            <Link
-              href="/company"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl text-sm font-medium transition-all border-2"
-              style={{ 
-                borderColor: 'hsl(var(--primary))',
-                color: 'hsl(var(--primary))',
-                background: 'transparent'
-              }}
-            >
-              <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span>Company Profile</span>
-            </Link>
-            <Link
-              href="/invoices/new"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl text-white text-sm font-medium transition-all shadow-lg active:scale-95"
-              style={{ 
-                background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)))',
-                boxShadow: '0 10px 30px -10px hsl(var(--primary) / 0.4)'
-              }}
-            >
-              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span>New Invoice</span>
-            </Link>
+            {!company?.name ? (
+              <Link
+                href="/company"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl text-white text-sm font-medium transition-all shadow-lg animate-pulse"
+                style={{ 
+                  background: 'linear-gradient(135deg, #C17A47, #8B5A3C)',
+                  boxShadow: '0 10px 30px -10px rgba(193, 122, 71, 0.6)'
+                }}
+              >
+                <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>Setup Company Profile First</span>
+              </Link>
+            ) : (
+              <Link
+                href="/company"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl text-sm font-medium transition-all border-2"
+                style={{ 
+                  borderColor: 'hsl(var(--primary))',
+                  color: 'hsl(var(--primary))',
+                  background: 'transparent'
+                }}
+              >
+                <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>Company Profile</span>
+              </Link>
+            )}
+            {company?.name ? (
+              <Link
+                href="/invoices/new"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl text-white text-sm font-medium transition-all shadow-lg active:scale-95"
+                style={{ 
+                  background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)))',
+                  boxShadow: '0 10px 30px -10px hsl(var(--primary) / 0.4)'
+                }}
+              >
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>New Invoice</span>
+              </Link>
+            ) : (
+              <button
+                disabled
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl text-white text-sm font-medium transition-all opacity-50 cursor-not-allowed"
+                style={{ 
+                  background: 'hsl(var(--muted))',
+                  color: 'hsl(var(--muted-foreground))'
+                }}
+                title="Please setup Company Profile first"
+              >
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>New Invoice</span>
+              </button>
+            )}
           </div>
         </div>
 

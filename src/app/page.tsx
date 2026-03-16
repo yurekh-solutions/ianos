@@ -131,7 +131,7 @@ export default function Dashboard() {
             }}
           >
             <Plus className="w-4 h-4" />
-            <span>New Invoice</span>
+            <span>Billing Suit</span>
           </Link>
         </motion.div>
 
