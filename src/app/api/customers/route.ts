@@ -6,8 +6,10 @@ import User from '@/models/User';
 
 export async function GET(req: NextRequest) {
   try {
+    console.log('GET /api/customers - Starting request');
     const session = await getServerSession(req);
     if (!session?.user?.email) {
+      console.log('GET /api/customers - Unauthorized');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
