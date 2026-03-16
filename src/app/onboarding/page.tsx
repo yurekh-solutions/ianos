@@ -97,7 +97,7 @@ export default function OnboardingPage() {
         className="glass-card p-8 w-full max-w-lg"
       >
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-white mb-2">Welcome to IANOS</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">Welcome to AIONS</h1>
           <p className="text-white/60">Let&apos;s set up your account</p>
           
           <div className="flex items-center justify-center gap-4 mt-6">

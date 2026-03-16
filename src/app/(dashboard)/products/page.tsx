@@ -69,25 +69,41 @@ export default function ProductsPage() {
   const avgPrice = products.length > 0 ? totalValue / products.length : 0;
 
   return (
-    <div className="p-6 h-full overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+    <div className="p-4 md:p-6 h-full overflow-auto" style={{ background: 'var(--page-gradient)' }}>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-white">Products</h1>
-            <p className="text-white/50 text-sm">Manage your product catalog</p>
+            <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>Products</h1>
+            <p className="text-sm mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Manage your product catalog</p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
-              <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-white/40'}`}>
+            <div className="flex items-center gap-1 p-1 rounded-xl" style={{ background: 'hsl(var(--muted))' }}>
+              <button 
+                onClick={() => setViewMode('grid')} 
+                className={`p-1.5 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-white shadow-sm' : ''}`}
+                style={{ color: viewMode === 'grid' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }}
+              >
                 <Grid3X3 className="w-4 h-4" />
               </button>
-              <button onClick={() => setViewMode('list')} className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-white/40'}`}>
+              <button 
+                onClick={() => setViewMode('list')} 
+                className={`p-1.5 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm' : ''}`}
+                style={{ color: viewMode === 'list' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }}
+              >
                 <List className="w-4 h-4" />
               </button>
             </div>
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg text-white text-sm font-medium shadow-lg shadow-amber-500/25">
+            <motion.button 
+              whileHover={{ scale: 1.02 }} 
+              whileTap={{ scale: 0.98 }} 
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-medium transition-all"
+              style={{ 
+                background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%)',
+                boxShadow: '0 4px 14px 0 hsl(var(--primary) / 0.39)'
+              }}
+            >
               <Plus className="w-4 h-4" /> Add Product
             </motion.button>
           </div>
@@ -96,85 +112,163 @@ export default function ProductsPage() {
         {/* Stats Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Total Products', value: products.length, icon: Package, gradient: 'from-amber-500 to-orange-500' },
-            { label: 'Avg Price', value: `$${avgPrice.toFixed(2)}`, icon: DollarSign, gradient: 'from-emerald-500 to-teal-500' },
-            { label: 'Total Value', value: `$${totalValue.toLocaleString()}`, icon: TrendingUp, gradient: 'from-indigo-500 to-purple-500' },
-            { label: 'Categories', value: '5', icon: Tag, gradient: 'from-pink-500 to-rose-500' },
+            { label: 'Total Products', value: products.length, icon: Package, gradient: 'from-amber-500 to-orange-600', bgGlow: 'bg-amber-500/10' },
+            { label: 'Avg Price', value: `$${avgPrice.toFixed(2)}`, icon: DollarSign, gradient: 'from-emerald-500 to-teal-600', bgGlow: 'bg-emerald-500/10' },
+            { label: 'Total Value', value: `$${totalValue.toLocaleString()}`, icon: TrendingUp, gradient: 'from-violet-500 to-purple-600', bgGlow: 'bg-violet-500/10' },
+            { label: 'Categories', value: '5', icon: Tag, gradient: 'from-rose-500 to-pink-600', bgGlow: 'bg-rose-500/10' },
           ].map((stat, i) => (
-            <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-              className="relative overflow-hidden rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-4 group hover:bg-white/10 transition-all">
+            <motion.div 
+              key={stat.label} 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ delay: i * 0.1 }}
+              className="glass-card p-4"
+            >
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-white/50 text-xs font-medium uppercase">{stat.label}</p>
-                  <p className="text-xl font-bold text-white mt-1">{stat.value}</p>
+                  <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'hsl(var(--muted-foreground))' }}>{stat.label}</p>
+                  <p className="text-xl font-bold mt-1" style={{ color: 'hsl(var(--foreground))' }}>{stat.value}</p>
                 </div>
-                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg`}>
-                  <stat.icon className="w-5 h-5 text-white" />
+                <div className={`w-10 h-10 rounded-xl ${stat.bgGlow} flex items-center justify-center`}>
+                  <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg`}>
+                    <stat.icon className="w-4 h-4 text-white" />
+                  </div>
                 </div>
               </div>
-              <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient} opacity-50`} />
             </motion.div>
           ))}
         </div>
 
         {/* Chart */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-          className="rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-4">
-          <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-amber-400" /> Sales by Category
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ delay: 0.4 }}
+          className="glass-card p-5"
+        >
+          <h3 className="font-semibold mb-4 flex items-center gap-2" style={{ color: 'hsl(var(--foreground))' }}>
+            <TrendingUp className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} /> Sales by Category
           </h3>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={chartData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis type="number" stroke="rgba(255,255,255,0.3)" fontSize={11} />
-              <YAxis dataKey="category" type="category" stroke="rgba(255,255,255,0.3)" fontSize={11} width={80} />
-              <Tooltip contentStyle={{ background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }} />
-              <Bar dataKey="sales" fill="#f59e0b" radius={[0, 4, 4, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" />
+              <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+              <YAxis dataKey="category" type="category" stroke="hsl(var(--muted-foreground))" fontSize={11} width={80} />
+              <Tooltip 
+                contentStyle={{ 
+                  background: 'hsl(var(--card-bg))', 
+                  border: '1px solid hsl(var(--border) / 0.5)', 
+                  borderRadius: '0.75rem',
+                  color: 'hsl(var(--foreground))'
+                }} 
+              />
+              <Bar dataKey="sales" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
 
         {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-          <input type="text" placeholder="Search products..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-amber-500/50" />
+        <div className="glass-card p-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'hsl(var(--muted-foreground))' }} />
+            <input 
+              type="text" 
+              placeholder="Search products..." 
+              value={searchTerm} 
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full glass-input pl-10 pr-4 py-2.5 text-sm"
+            />
+          </div>
         </div>
 
         {/* Add Product Modal */}
         <AnimatePresence>
           {showForm && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
-                className="w-full max-w-md rounded-xl bg-slate-900 border border-white/10 p-6">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            >
+              <motion.div 
+                initial={{ scale: 0.95 }} 
+                animate={{ scale: 1 }} 
+                exit={{ scale: 0.95 }}
+                className="w-full max-w-md glass-card p-6"
+              >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-white font-semibold">Add New Product</h3>
-                  <button onClick={() => setShowForm(false)} className="p-1 rounded-lg hover:bg-white/10 text-white/60">
+                  <h3 className="font-semibold" style={{ color: 'hsl(var(--foreground))' }}>Add New Product</h3>
+                  <button 
+                    onClick={() => setShowForm(false)} 
+                    className="p-1.5 rounded-lg transition-colors hover:bg-[hsl(var(--muted))]"
+                    style={{ color: 'hsl(var(--muted-foreground))' }}
+                  >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-3">
-                  <input type="text" placeholder="Product Name *" value={newProduct.name}
+                  <input 
+                    type="text" 
+                    placeholder="Product Name *" 
+                    value={newProduct.name}
                     onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-amber-500/50" required />
-                  <input type="text" placeholder="SKU" value={newProduct.sku}
+                    className="w-full glass-input px-4 py-2.5 text-sm"
+                    required 
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="SKU" 
+                    value={newProduct.sku}
                     onChange={(e) => setNewProduct({ ...newProduct, sku: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-amber-500/50" />
+                    className="w-full glass-input px-4 py-2.5 text-sm"
+                  />
                   <div className="grid grid-cols-2 gap-3">
-                    <input type="number" placeholder="Price *" value={newProduct.price}
+                    <input 
+                      type="number" 
+                      placeholder="Price *" 
+                      value={newProduct.price}
                       onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-amber-500/50" required min="0" step="0.01" />
-                    <input type="number" placeholder="Tax Rate %" value={newProduct.taxRate}
+                      className="w-full glass-input px-4 py-2.5 text-sm"
+                      required min="0" step="0.01" 
+                    />
+                    <input 
+                      type="number" 
+                      placeholder="Tax Rate %" 
+                      value={newProduct.taxRate}
                       onChange={(e) => setNewProduct({ ...newProduct, taxRate: e.target.value })}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-amber-500/50" min="0" max="100" />
+                      className="w-full glass-input px-4 py-2.5 text-sm"
+                      min="0" max="100" 
+                    />
                   </div>
-                  <input type="text" placeholder="Description" value={newProduct.description}
+                  <input 
+                    type="text" 
+                    placeholder="Description" 
+                    value={newProduct.description}
                     onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-amber-500/50" />
+                    className="w-full glass-input px-4 py-2.5 text-sm"
+                  />
                   <div className="flex gap-2 pt-2">
-                    <button type="submit" className="flex-1 py-2.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm font-medium">Save Product</button>
-                    <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 rounded-lg bg-white/5 text-white/60 text-sm hover:bg-white/10">Cancel</button>
+                    <button 
+                      type="submit" 
+                      className="flex-1 py-2.5 rounded-xl text-white text-sm font-medium transition-all"
+                      style={{ 
+                        background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%)',
+                        boxShadow: '0 4px 14px 0 hsl(var(--primary) / 0.39)'
+                      }}
+                    >
+                      Save Product
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setShowForm(false)} 
+                      className="px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                      style={{ 
+                        background: 'hsl(var(--muted))',
+                        color: 'hsl(var(--foreground))'
+                      }}
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </form>
               </motion.div>
@@ -185,36 +279,51 @@ export default function ProductsPage() {
         {/* Products Grid/List */}
         {loading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="w-8 h-8 border-2 border-white/20 border-t-amber-500 rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 rounded-full animate-spin" 
+              style={{ borderColor: 'hsl(var(--border))', borderTopColor: 'hsl(var(--primary))' }} />
           </div>
         ) : (
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
             {filteredProducts.length === 0 ? (
-              <div className="col-span-full flex flex-col items-center justify-center py-16 rounded-xl bg-white/5 border border-white/10">
-                <Package className="w-12 h-12 text-white/20 mb-4" />
-                <p className="text-white/60">No products found</p>
-                <p className="text-white/40 text-sm mt-1">Add your first product to get started</p>
+              <div className="col-span-full flex flex-col items-center justify-center py-16 glass-card">
+                <Package className="w-12 h-12 mb-4" style={{ color: 'hsl(var(--muted-foreground))' }} />
+                <p style={{ color: 'hsl(var(--foreground))' }}>No products found</p>
+                <p className="text-sm mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Add your first product to get started</p>
               </div>
             ) : (
               filteredProducts.map((product, index) => (
-                <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
-                  className={`rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-4 hover:bg-white/10 transition-all group ${viewMode === 'list' ? 'flex items-center gap-4' : ''}`}>
+                <motion.div 
+                  key={product.id} 
+                  initial={{ opacity: 0, y: 20 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  transition={{ delay: index * 0.05 }}
+                  className={`glass-card p-4 group ${viewMode === 'list' ? 'flex items-center gap-4' : ''}`}
+                >
                   <div className={`${viewMode === 'list' ? 'flex items-center gap-4 flex-1' : ''}`}>
-                    <div className={`rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg ${viewMode === 'list' ? 'w-12 h-12' : 'w-14 h-14 mb-3'}`}>
+                    <div 
+                      className={`rounded-xl flex items-center justify-center shadow-lg ${viewMode === 'list' ? 'w-12 h-12' : 'w-14 h-14 mb-3'}`}
+                      style={{ background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)))' }}
+                    >
                       <Package className={`text-white ${viewMode === 'list' ? 'w-6 h-6' : 'w-7 h-7'}`} />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-start justify-between">
                         <div>
-                          <p className="text-white font-medium">{product.name}</p>
-                          {product.sku && <p className="text-white/40 text-xs">SKU: {product.sku}</p>}
+                          <p className="font-medium" style={{ color: 'hsl(var(--foreground))' }}>{product.name}</p>
+                          {product.sku && <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>SKU: {product.sku}</p>}
                         </div>
-                        <span className="text-lg font-bold text-white">${product.price.toFixed(2)}</span>
+                        <span className="text-lg font-bold" style={{ color: 'hsl(var(--foreground))' }}>${product.price.toFixed(2)}</span>
                       </div>
-                      {product.description && <p className="text-white/50 text-sm mt-1 line-clamp-2">{product.description}</p>}
+                      {product.description && <p className="text-sm mt-1 line-clamp-2" style={{ color: 'hsl(var(--muted-foreground))' }}>{product.description}</p>}
                       <div className="flex items-center gap-3 mt-2">
-                        <span className="text-white/40 text-xs">Tax: {product.taxRate}%</span>
-                        <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-xs">Active</span>
+                        <span className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>Tax: {product.taxRate}%</span>
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full"
+                          style={{ 
+                            background: 'hsl(142 76% 36% / 0.1)',
+                            color: 'hsl(142 76% 36%)'
+                          }}>
+                          Active
+                        </span>
                       </div>
                     </div>
                   </div>

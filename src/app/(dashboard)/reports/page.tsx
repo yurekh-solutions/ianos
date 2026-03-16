@@ -57,7 +57,7 @@ export default function ReportsPage() {
     ? Math.round(invoices.reduce((sum, inv) => sum + (inv.totalAmount || 0), 0) / invoices.length)
     : 0;
 
-  // Monthly revenue data (group by month)
+  // Monthly revenue data
   const monthlyData = invoices.reduce((acc: Record<string, { month: string; revenue: number; expenses: number }>, inv) => {
     const date = new Date(inv.createdAt);
     const month = date.toLocaleString('default', { month: 'short' });
@@ -74,7 +74,7 @@ export default function ReportsPage() {
     { status: 'Overdue', value: overdueCount || 0, color: '#ef4444' },
   ].filter(d => d.value > 0);
 
-  // Customer growth (mock based on actual customer count)
+  // Customer growth
   const customerGrowth = [
     { month: 'Jan', customers: Math.max(0, customers.length - 20) },
     { month: 'Feb', customers: Math.max(0, customers.length - 15) },
@@ -97,37 +97,45 @@ export default function ReportsPage() {
     .slice(0, 5);
 
   const stats = [
-    { label: 'Total Revenue', value: `$${totalRevenue.toLocaleString()}`, change: '+12.5%', up: true, icon: DollarSign, gradient: 'from-emerald-500 to-teal-500' },
-    { label: 'Total Invoices', value: invoices.length.toString(), change: '+8.2%', up: true, icon: FileText, gradient: 'from-indigo-500 to-purple-500' },
-    { label: 'Active Customers', value: customers.length.toString(), change: '+15.3%', up: true, icon: Users, gradient: 'from-pink-500 to-rose-500' },
-    { label: 'Avg Invoice', value: `$${avgInvoice}`, change: '-2.4%', up: false, icon: BarChart3, gradient: 'from-amber-500 to-orange-500' },
+    { label: 'Total Revenue', value: `$${totalRevenue.toLocaleString()}`, change: '+12.5%', up: true, icon: DollarSign, gradient: 'from-emerald-500 to-teal-600', bgGlow: 'bg-emerald-500/10' },
+    { label: 'Total Invoices', value: invoices.length.toString(), change: '+8.2%', up: true, icon: FileText, gradient: 'from-violet-500 to-purple-600', bgGlow: 'bg-violet-500/10' },
+    { label: 'Active Customers', value: customers.length.toString(), change: '+15.3%', up: true, icon: Users, gradient: 'from-rose-500 to-pink-600', bgGlow: 'bg-rose-500/10' },
+    { label: 'Avg Invoice', value: `$${avgInvoice}`, change: '-2.4%', up: false, icon: BarChart3, gradient: 'from-amber-500 to-orange-600', bgGlow: 'bg-amber-500/10' },
   ];
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="w-8 h-8 border-2 border-white/20 border-t-emerald-500 rounded-full animate-spin" />
+      <div className="flex items-center justify-center h-full" style={{ background: 'var(--page-gradient)' }}>
+        <div className="w-8 h-8 border-2 rounded-full animate-spin" 
+          style={{ borderColor: 'hsl(var(--border))', borderTopColor: 'hsl(var(--primary))' }} />
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-6 h-full overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+    <div className="p-4 md:p-6 h-full overflow-auto" style={{ background: 'var(--page-gradient)' }}>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-white">Reports</h1>
-            <p className="text-white/50 text-sm">Analytics and insights for your business</p>
+            <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>Reports</h1>
+            <p className="text-sm mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Analytics and insights for your business</p>
           </div>
           <div className="flex items-center gap-2">
-            <select className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none">
-              <option value="30" className="bg-slate-900">Last 30 days</option>
-              <option value="90" className="bg-slate-900">Last 90 days</option>
-              <option value="365" className="bg-slate-900">This Year</option>
+            <select className="glass-input px-3 py-2 text-sm">
+              <option value="30">Last 30 days</option>
+              <option value="90">Last 90 days</option>
+              <option value="365">This Year</option>
             </select>
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg text-white text-sm font-medium shadow-lg shadow-cyan-500/25">
+            <motion.button 
+              whileHover={{ scale: 1.02 }} 
+              whileTap={{ scale: 0.98 }}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-medium transition-all"
+              style={{ 
+                background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%)',
+                boxShadow: '0 4px 14px 0 hsl(var(--primary) / 0.39)'
+              }}
+            >
               <Download className="w-4 h-4" /> Export
             </motion.button>
           </div>
@@ -136,22 +144,28 @@ export default function ReportsPage() {
         {/* Stats Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat, i) => (
-            <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-              className="relative overflow-hidden rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-4 group hover:bg-white/10 transition-all">
+            <motion.div 
+              key={stat.label} 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ delay: i * 0.1 }}
+              className="glass-card p-4"
+            >
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-white/50 text-xs font-medium uppercase">{stat.label}</p>
-                  <p className="text-xl font-bold text-white mt-1">{stat.value}</p>
+                  <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'hsl(var(--muted-foreground))' }}>{stat.label}</p>
+                  <p className="text-xl font-bold mt-1" style={{ color: 'hsl(var(--foreground))' }}>{stat.value}</p>
                   <div className="flex items-center gap-1 mt-2">
-                    {stat.up ? <ArrowUpRight className="w-3 h-3 text-emerald-400" /> : <ArrowDownRight className="w-3 h-3 text-red-400" />}
-                    <span className={stat.up ? 'text-emerald-400 text-xs' : 'text-red-400 text-xs'}>{stat.change}</span>
+                    {stat.up ? <ArrowUpRight className="w-3 h-3 text-emerald-500" /> : <ArrowDownRight className="w-3 h-3 text-red-500" />}
+                    <span className={stat.up ? 'text-emerald-500 text-xs' : 'text-red-500 text-xs'}>{stat.change}</span>
                   </div>
                 </div>
-                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg`}>
-                  <stat.icon className="w-5 h-5 text-white" />
+                <div className={`w-10 h-10 rounded-xl ${stat.bgGlow} flex items-center justify-center`}>
+                  <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg`}>
+                    <stat.icon className="w-4 h-4 text-white" />
+                  </div>
                 </div>
               </div>
-              <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient} opacity-50`} />
             </motion.div>
           ))}
         </div>
@@ -159,13 +173,17 @@ export default function ReportsPage() {
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Revenue Chart */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-            className="lg:col-span-2 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.4 }}
+            className="lg:col-span-2 glass-card p-5"
+          >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-semibold flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-emerald-400" /> Revenue vs Expenses
+              <h3 className="font-semibold flex items-center gap-2" style={{ color: 'hsl(var(--foreground))' }}>
+                <TrendingUp className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} /> Revenue vs Expenses
               </h3>
-              <div className="flex items-center gap-4 text-xs">
+              <div className="flex items-center gap-4 text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Revenue</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> Expenses</span>
               </div>
@@ -182,10 +200,17 @@ export default function ReportsPage() {
                     <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="month" stroke="rgba(255,255,255,0.3)" fontSize={11} />
-                <YAxis stroke="rgba(255,255,255,0.3)" fontSize={11} />
-                <Tooltip contentStyle={{ background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" />
+                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <Tooltip 
+                  contentStyle={{ 
+                    background: 'hsl(var(--card-bg))', 
+                    border: '1px solid hsl(var(--border) / 0.5)', 
+                    borderRadius: '0.75rem',
+                    color: 'hsl(var(--foreground))'
+                  }} 
+                />
                 <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorRev)" />
                 <Area type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorExp)" />
               </AreaChart>
@@ -193,24 +218,35 @@ export default function ReportsPage() {
           </motion.div>
 
           {/* Invoice Status Pie */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-            className="rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-4">
-            <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-indigo-400" /> Invoice Status
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.5 }}
+            className="glass-card p-5"
+          >
+            <h3 className="font-semibold mb-4 flex items-center gap-2" style={{ color: 'hsl(var(--foreground))' }}>
+              <FileText className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} /> Invoice Status
             </h3>
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie data={invoiceData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} dataKey="value" stroke="none">
                   {invoiceData.map((entry, index) => (<Cell key={index} fill={entry.color} />))}
                 </Pie>
-                <Tooltip contentStyle={{ background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    background: 'hsl(var(--card-bg))', 
+                    border: '1px solid hsl(var(--border) / 0.5)', 
+                    borderRadius: '0.75rem',
+                    color: 'hsl(var(--foreground))'
+                  }} 
+                />
               </PieChart>
             </ResponsiveContainer>
             <div className="flex justify-center gap-3 mt-2">
               {invoiceData.map((item) => (
-                <div key={item.status} className="flex items-center gap-1.5 text-xs">
+                <div key={item.status} className="flex items-center gap-1.5 text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
                   <span className="w-2 h-2 rounded-full" style={{ background: item.color }} />
-                  <span className="text-white/60">{item.status}</span>
+                  <span>{item.status}</span>
                 </div>
               ))}
             </div>
@@ -220,41 +256,63 @@ export default function ReportsPage() {
         {/* Second Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Customer Growth */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-            className="rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-4">
-            <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-              <Users className="w-4 h-4 text-pink-400" /> Customer Growth
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.6 }}
+            className="glass-card p-5"
+          >
+            <h3 className="font-semibold mb-4 flex items-center gap-2" style={{ color: 'hsl(var(--foreground))' }}>
+              <Users className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} /> Customer Growth
             </h3>
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={customerGrowth}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="month" stroke="rgba(255,255,255,0.3)" fontSize={11} />
-                <YAxis stroke="rgba(255,255,255,0.3)" fontSize={11} />
-                <Tooltip contentStyle={{ background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }} />
-                <Line type="monotone" dataKey="customers" stroke="#ec4899" strokeWidth={2} dot={{ fill: '#ec4899', strokeWidth: 0, r: 4 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" />
+                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <Tooltip 
+                  contentStyle={{ 
+                    background: 'hsl(var(--card-bg))', 
+                    border: '1px solid hsl(var(--border) / 0.5)', 
+                    borderRadius: '0.75rem',
+                    color: 'hsl(var(--foreground))'
+                  }} 
+                />
+                <Line type="monotone" dataKey="customers" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: 'hsl(var(--primary))', strokeWidth: 0, r: 4 }} />
               </LineChart>
             </ResponsiveContainer>
           </motion.div>
 
           {/* Top Customers */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-            className="rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-4">
-            <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-amber-400" /> Top Customers
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.7 }}
+            className="glass-card p-5"
+          >
+            <h3 className="font-semibold mb-4 flex items-center gap-2" style={{ color: 'hsl(var(--foreground))' }}>
+              <BarChart3 className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} /> Top Customers
             </h3>
             <div className="space-y-3">
               {topCustomers.map((customer, index) => (
                 <div key={customer.name} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-xs font-bold">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+                    style={{ background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)))' }}>
                     {index + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-medium truncate">{customer.name}</p>
-                    <p className="text-white/40 text-xs">{customer.invoices} invoices</p>
+                    <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>{customer.name}</p>
+                    <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{customer.invoices} invoices</p>
                   </div>
-                  <span className="text-white font-medium text-sm">${customer.revenue.toLocaleString()}</span>
+                  <span className="font-medium text-sm" style={{ color: 'hsl(var(--foreground))' }}>${customer.revenue.toLocaleString()}</span>
                 </div>
               ))}
+              {topCustomers.length === 0 && (
+                <div className="text-center py-8">
+                  <Users className="w-10 h-10 mx-auto mb-2" style={{ color: 'hsl(var(--muted-foreground))' }} />
+                  <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>No customer data yet</p>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>

@@ -71,13 +71,11 @@ export default function CompanyPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       alert('Please upload an image file');
       return;
     }
 
-    // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       alert('File size must be less than 2MB');
       return;
@@ -85,7 +83,6 @@ export default function CompanyPage() {
 
     setUploading(true);
     try {
-      // Convert to base64
       const reader = new FileReader();
       reader.onload = async (event) => {
         const base64 = event.target?.result as string;
@@ -112,34 +109,42 @@ export default function CompanyPage() {
 
   const InputField = ({ label, icon: Icon, ...props }: { label: string; icon: React.ElementType; [key: string]: unknown }) => (
     <div className="space-y-1.5">
-      <label className="text-white/50 text-xs font-medium uppercase tracking-wide flex items-center gap-1.5">
+      <label className="text-xs font-medium uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
         <Icon className="w-3.5 h-3.5" /> {label}
       </label>
-      <input {...props}
-        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-emerald-500/50 transition-colors" />
+      <input {...props} className="w-full glass-input px-4 py-2.5 text-sm" />
     </div>
   );
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-        <div className="w-8 h-8 border-2 border-white/20 border-t-emerald-500 rounded-full animate-spin" />
+      <div className="flex items-center justify-center h-full" style={{ background: 'var(--page-gradient)' }}>
+        <div className="w-8 h-8 border-2 rounded-full animate-spin" 
+          style={{ borderColor: 'hsl(var(--border))', borderTopColor: 'hsl(var(--primary))' }} />
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-6 h-full overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="p-4 md:p-6 h-full overflow-auto" style={{ background: 'var(--page-gradient)' }}>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-white">Company Profile</h1>
-            <p className="text-white/50 text-sm">Manage your business information</p>
+            <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>Company Profile</h1>
+            <p className="text-sm mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Manage your business information</p>
           </div>
           {saved && (
-            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-emerald-400 text-sm">
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }} 
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm"
+              style={{ 
+                background: 'hsl(142 76% 36% / 0.1)',
+                border: '1px solid hsl(142 76% 36% / 0.2)',
+                color: 'hsl(142 76% 36%)'
+              }}
+            >
               <CheckCircle2 className="w-4 h-4" /> Saved successfully
             </motion.div>
           )}
@@ -147,23 +152,35 @@ export default function CompanyPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Logo Upload */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-4 md:p-6">
-            <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
-              <ImageIcon className="w-4 h-4 text-emerald-400" /> Company Logo
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.1 }}
+            className="glass-card p-5"
+          >
+            <h2 className="font-semibold mb-4 flex items-center gap-2" style={{ color: 'hsl(var(--foreground))' }}>
+              <ImageIcon className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} /> Company Logo
             </h2>
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <div className="relative">
-                <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-600/20 border-2 border-dashed border-white/20 flex items-center justify-center shadow-lg overflow-hidden">
+                <div className="w-24 h-24 rounded-xl flex items-center justify-center shadow-lg overflow-hidden"
+                  style={{ 
+                    background: 'hsl(var(--muted))',
+                    border: '2px dashed hsl(var(--border) / 0.5)'
+                  }}>
                   {company.logoUrl ? (
                     <Image src={company.logoUrl} alt="Company Logo" fill className="object-cover" unoptimized />
                   ) : (
-                    <Building2 className="w-10 h-10 text-white/40" />
+                    <Building2 className="w-10 h-10" style={{ color: 'hsl(var(--muted-foreground))' }} />
                   )}
                 </div>
                 {company.logoUrl && (
-                  <button type="button" onClick={removeLogo}
-                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-colors shadow-lg">
+                  <button 
+                    type="button" 
+                    onClick={removeLogo}
+                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-white transition-colors shadow-lg"
+                    style={{ background: 'hsl(0 84% 60%)' }}
+                  >
                     <X className="w-3 h-3" />
                   </button>
                 )}
@@ -176,81 +193,173 @@ export default function CompanyPage() {
                   accept="image/jpeg,image/png,image/jpg,image/webp" 
                   className="hidden" 
                 />
-                <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                  className="px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white text-sm hover:bg-white/10 active:bg-white/20 transition-colors flex items-center gap-2 mx-auto sm:mx-0 disabled:opacity-50 min-h-[44px]">
+                <button 
+                  type="button" 
+                  onClick={() => fileInputRef.current?.click()} 
+                  disabled={uploading}
+                  className="px-4 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2 mx-auto sm:mx-0 disabled:opacity-50"
+                  style={{ 
+                    background: 'hsl(var(--muted))',
+                    color: 'hsl(var(--foreground))'
+                  }}
+                >
                   {uploading ? (
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 rounded-full animate-spin" 
+                      style={{ borderColor: 'hsl(var(--border))', borderTopColor: 'hsl(var(--primary))' }} />
                   ) : (
                     <Upload className="w-4 h-4" />
                   )}
                   {uploading ? 'Uploading...' : company.logoUrl ? 'Change Logo' : 'Upload Logo'}
                 </button>
-                <p className="text-white/40 text-xs mt-2">PNG, JPG up to 2MB</p>
+                <p className="text-xs mt-2" style={{ color: 'hsl(var(--muted-foreground))' }}>PNG, JPG up to 2MB</p>
               </div>
             </div>
           </motion.div>
 
           {/* Basic Info */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-4 md:p-6">
-            <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-indigo-400" /> Basic Information
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.2 }}
+            className="glass-card p-5"
+          >
+            <h2 className="font-semibold mb-4 flex items-center gap-2" style={{ color: 'hsl(var(--foreground))' }}>
+              <Building2 className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} /> Basic Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField label="Company Name" icon={Building2} placeholder="Your Company Name"
-                value={company.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, name: e.target.value })} />
-              <InputField label="Email" icon={Mail} type="email" placeholder="company@example.com"
-                value={company.email} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, email: e.target.value })} />
-              <InputField label="Phone" icon={Phone} type="tel" placeholder="+1 234 567 890"
-                value={company.phone} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, phone: e.target.value })} />
-              <InputField label="Website" icon={Globe} placeholder="https://yourcompany.com"
-                value={company.website} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, website: e.target.value })} />
+              <InputField 
+                label="Company Name" 
+                icon={Building2} 
+                placeholder="Your Company Name"
+                value={company.name} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, name: e.target.value })} 
+              />
+              <InputField 
+                label="Email" 
+                icon={Mail} 
+                type="email" 
+                placeholder="company@example.com"
+                value={company.email} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, email: e.target.value })} 
+              />
+              <InputField 
+                label="Phone" 
+                icon={Phone} 
+                type="tel" 
+                placeholder="+1 234 567 890"
+                value={company.phone} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, phone: e.target.value })} 
+              />
+              <InputField 
+                label="Website" 
+                icon={Globe} 
+                placeholder="https://yourcompany.com"
+                value={company.website} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, website: e.target.value })} 
+              />
             </div>
           </motion.div>
 
           {/* Address */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-            className="rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-4 md:p-6">
-            <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-pink-400" /> Address
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.3 }}
+            className="glass-card p-5"
+          >
+            <h2 className="font-semibold mb-4 flex items-center gap-2" style={{ color: 'hsl(var(--foreground))' }}>
+              <MapPin className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} /> Address
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <InputField label="Street Address" icon={MapPin} placeholder="123 Business Street"
-                  value={company.address} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, address: e.target.value })} />
+                <InputField 
+                  label="Street Address" 
+                  icon={MapPin} 
+                  placeholder="123 Business Street"
+                  value={company.address} 
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, address: e.target.value })} 
+                />
               </div>
-              <InputField label="City" icon={MapPin} placeholder="New York"
-                value={company.city} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, city: e.target.value })} />
-              <InputField label="Country" icon={Globe} placeholder="United States"
-                value={company.country} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, country: e.target.value })} />
+              <InputField 
+                label="City" 
+                icon={MapPin} 
+                placeholder="New York"
+                value={company.city} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, city: e.target.value })} 
+              />
+              <InputField 
+                label="Country" 
+                icon={Globe} 
+                placeholder="United States"
+                value={company.country} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, country: e.target.value })} 
+              />
             </div>
           </motion.div>
 
           {/* Tax & Banking */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-            className="rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-4 md:p-6">
-            <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-amber-400" /> Tax & Banking
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.4 }}
+            className="glass-card p-5"
+          >
+            <h2 className="font-semibold mb-4 flex items-center gap-2" style={{ color: 'hsl(var(--foreground))' }}>
+              <CreditCard className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} /> Tax & Banking
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField label="Tax ID / VAT Number" icon={CreditCard} placeholder="XX-XXXXXXX"
-                value={company.taxId} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, taxId: e.target.value })} />
-              <InputField label="Bank Name" icon={Building2} placeholder="Bank of America"
-                value={company.bankName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, bankName: e.target.value })} />
-              <InputField label="Account Number" icon={CreditCard} placeholder="XXXX-XXXX-XXXX"
-                value={company.bankAccount} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, bankAccount: e.target.value })} />
-              <InputField label="Routing Number" icon={CreditCard} placeholder="XXXXXXXXX"
-                value={company.bankRouting} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, bankRouting: e.target.value })} />
+              <InputField 
+                label="Tax ID / VAT Number" 
+                icon={CreditCard} 
+                placeholder="XX-XXXXXXX"
+                value={company.taxId} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, taxId: e.target.value })} 
+              />
+              <InputField 
+                label="Bank Name" 
+                icon={Building2} 
+                placeholder="Bank of America"
+                value={company.bankName} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, bankName: e.target.value })} 
+              />
+              <InputField 
+                label="Account Number" 
+                icon={CreditCard} 
+                placeholder="XXXX-XXXX-XXXX"
+                value={company.bankAccount} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, bankAccount: e.target.value })} 
+              />
+              <InputField 
+                label="Routing Number" 
+                icon={CreditCard} 
+                placeholder="XXXXXXXXX"
+                value={company.bankRouting} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, bankRouting: e.target.value })} 
+              />
             </div>
           </motion.div>
 
           {/* Save Button */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-            className="flex justify-end">
-            <motion.button type="submit" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} disabled={saving}
-              className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg text-white text-sm font-medium shadow-lg shadow-emerald-500/25 disabled:opacity-50">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.5 }}
+            className="flex justify-end"
+          >
+            <motion.button 
+              type="submit" 
+              whileHover={{ scale: 1.02 }} 
+              whileTap={{ scale: 0.98 }} 
+              disabled={saving}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-white text-sm font-medium transition-all disabled:opacity-50"
+              style={{ 
+                background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%)',
+                boxShadow: '0 4px 14px 0 hsl(var(--primary) / 0.39)'
+              }}
+            >
               {saving ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 rounded-full animate-spin" 
+                  style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: 'white' }} />
               ) : (
                 <Save className="w-4 h-4" />
               )}

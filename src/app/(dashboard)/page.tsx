@@ -1,17 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell,
 } from 'recharts';
 import {
-  FileText, Users, Package, DollarSign, TrendingUp, Plus, ArrowRight,
-  Clock, CheckCircle2, AlertCircle, Sparkles, Activity, ArrowUpRight,
-  Receipt, UserPlus, BoxIcon, Zap, Calendar, Target, Wallet, CreditCard,
+  FileText, Users, Package, Plus,
+  Sparkles, Activity, ArrowUpRight, ArrowUp,
+  Receipt, UserPlus, BoxIcon, Zap, Target, Wallet,
+  Clock, ChevronRight, TrendingUp, CircleDot,
+  CalendarDays, Bell, MoreHorizontal, Eye, Layers,
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -31,8 +33,6 @@ interface Invoice {
   createdAt: string;
   customer?: { name: string };
 }
-
-const COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6'];
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -62,38 +62,28 @@ export default function DashboardPage() {
         pendingInvoices: invoices.filter((inv) => inv.status === 'pending').length,
         paidInvoices: invoices.filter((inv) => inv.status === 'paid').length,
       });
-      setRecentInvoices(invoices.slice(0, 5));
+      setRecentInvoices(invoices.slice(0, 4));
       setAllInvoices(invoices);
     } catch (error) { console.error('Error:', error); }
     finally { setLoading(false); }
   };
 
-  // Generate real chart data from invoices
-  const monthlyData = allInvoices.reduce((acc: Record<string, { month: string; revenue: number; invoices: number }>, inv) => {
+  const monthlyData = allInvoices.reduce((acc: Record<string, { month: string; revenue: number }>, inv) => {
     const date = new Date(inv.createdAt);
     const month = date.toLocaleString('default', { month: 'short' });
-    if (!acc[month]) acc[month] = { month, revenue: 0, invoices: 0 };
-    acc[month].invoices += 1;
+    if (!acc[month]) acc[month] = { month, revenue: 0 };
     if (inv.status === 'paid') acc[month].revenue += inv.totalAmount || 0;
     return acc;
   }, {});
   const revenueData = Object.values(monthlyData).slice(-6);
-
-  // Weekly data (last 7 days)
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const weeklyData = days.map(day => ({ day, amount: 0 }));
-  allInvoices.forEach(inv => {
-    const date = new Date(inv.createdAt);
-    const dayIndex = date.getDay();
-    if (inv.status === 'paid') {
-      weeklyData[dayIndex].amount += inv.totalAmount || 0;
-    }
-  });
+  if (revenueData.length === 0) {
+    ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].forEach(m => revenueData.push({ month: m, revenue: 0 }));
+  }
 
   const pieData = [
-    { name: 'Paid', value: stats.paidInvoices || 1, color: '#10b981' },
-    { name: 'Pending', value: stats.pendingInvoices || 1, color: '#f59e0b' },
-    { name: 'Draft', value: Math.max(1, stats.totalInvoices - stats.paidInvoices - stats.pendingInvoices), color: '#6366f1' },
+    { name: 'Paid', value: stats.paidInvoices || 1, color: '#8B9A7B' },
+    { name: 'Pending', value: stats.pendingInvoices || 1, color: '#D4A574' },
+    { name: 'Draft', value: Math.max(1, stats.totalInvoices - stats.paidInvoices - stats.pendingInvoices), color: '#CDC9C5' },
   ];
 
   const getGreeting = () => {
@@ -103,229 +93,445 @@ export default function DashboardPage() {
     return 'Good Evening';
   };
 
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      paid: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-      pending: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-      overdue: 'bg-red-500/20 text-red-400 border-red-500/30',
+  const getStatusStyle = (status: string) => {
+    const styles: Record<string, { bg: string; text: string; dot: string }> = {
+      paid: { bg: 'bg-emerald-50', text: 'text-emerald-600', dot: 'bg-emerald-500' },
+      pending: { bg: 'bg-amber-50', text: 'text-amber-600', dot: 'bg-amber-500' },
+      overdue: { bg: 'bg-rose-50', text: 'text-rose-600', dot: 'bg-rose-500' },
     };
-    return colors[status] || 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+    return styles[status] || { bg: 'bg-gray-50', text: 'text-gray-600', dot: 'bg-gray-400' };
   };
+
+  const recentActivity = [
+    { icon: Receipt, title: 'New invoice created', desc: 'Invoice #INV-001 for $1,250', time: '2 min ago', color: '#C17A47' },
+    { icon: Wallet, title: 'Payment received', desc: '$850 from John Smith', time: '1 hour ago', color: '#8B9A7B' },
+    { icon: UserPlus, title: 'New customer added', desc: 'Sarah Johnson joined', time: '3 hours ago', color: '#B5A89A' },
+    { icon: Zap, title: 'Automation triggered', desc: 'Invoice reminder sent', time: '5 hours ago', color: '#D4A574' },
+  ];
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #F8F6F3 0%, #FCFAF7 50%, #F5F1EB 100%)' }}>
         <div className="relative">
-          <div className="w-16 h-16 border-4 border-white/10 border-t-indigo-500 rounded-full animate-spin" />
-          <Zap className="w-6 h-6 text-indigo-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+            className="w-16 h-16 rounded-full"
+            style={{ border: '3px solid #E8E0D5', borderTopColor: '#C17A47' }}
+          />
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="absolute inset-0 flex items-center justify-center"
+          >
+            <Zap className="w-6 h-6 text-[#C17A47]" />
+          </motion.div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6 h-full overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4 sm:space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <span className="text-amber-400 text-sm font-medium">{getGreeting()}</span>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white">
-              Welcome, <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">{session?.user?.name?.split(' ')[0] || 'User'}</span>
-            </h1>
-          </div>
-          <Link href="/invoices/new">
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg text-white text-sm font-medium shadow-lg shadow-indigo-500/25 w-full sm:w-auto justify-center">
-              <Plus className="w-4 h-4" /> New Invoice
-            </motion.button>
-          </Link>
-        </div>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #F8F6F3 0%, #FCFAF7 50%, #F5F1EB 100%)' }}>
+      {/* Background Decoration */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] -translate-y-1/2 translate-x-1/4"
+          style={{ background: 'radial-gradient(circle, rgba(193,122,71,0.04) 0%, transparent 60%)' }} />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] translate-y-1/2 -translate-x-1/4"
+          style={{ background: 'radial-gradient(circle, rgba(139,154,123,0.04) 0%, transparent 60%)' }} />
+      </div>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        
+        {/* Header */}
+        <motion.header 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8"
+        >
+          <div>
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#C17A47]/8 border border-[#C17A47]/10 mb-3"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#C17A47]" />
+              <span className="text-xs font-semibold text-[#C17A47]">{getGreeting()}</span>
+            </motion.div>
+            
+            <motion.h1 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="text-2xl sm:text-3xl font-bold text-[#3A2D24]"
+            >
+              Welcome back, <span className="text-[#C17A47]">{session?.user?.name?.split(' ')[0] || 'User'}</span>
+            </motion.h1>
+            
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="text-sm text-[#8B7355] mt-1"
+            >
+              Here&apos;s what&apos;s happening with your business today
+            </motion.p>
+          </div>
+
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.25 }}
+            className="flex items-center gap-3"
+          >
+            <button className="p-2.5 rounded-xl bg-white border border-[#E8E0D5] hover:border-[#C17A47]/30 transition-colors">
+              <Bell className="w-5 h-5 text-[#8B7355]" />
+            </button>
+            <Link href="/invoices/new">
+              <motion.button 
+                whileHover={{ scale: 1.02, y: -1 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-semibold"
+                style={{ 
+                  background: 'linear-gradient(135deg, #C17A47 0%, #A85D2D 100%)',
+                  boxShadow: '0 8px 24px -6px rgba(193,122,71,0.4)'
+                }}
+              >
+                <Plus className="w-4 h-4" /> New Invoice
+              </motion.button>
+            </Link>
+          </motion.div>
+        </motion.header>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-8">
           {[
-            { label: 'Total Revenue', value: `$${stats.totalRevenue.toLocaleString()}`, icon: Wallet, gradient: 'from-emerald-500 to-teal-500', change: '+12.5%' },
-            { label: 'Invoices', value: stats.totalInvoices, icon: FileText, gradient: 'from-indigo-500 to-purple-500', change: '+8.2%' },
-            { label: 'Customers', value: stats.totalCustomers, icon: Users, gradient: 'from-pink-500 to-rose-500', change: '+15.3%' },
-            { label: 'Products', value: stats.totalProducts, icon: Package, gradient: 'from-amber-500 to-orange-500', change: '+4.1%' },
+            { label: 'Total Revenue', value: `$${stats.totalRevenue.toLocaleString()}`, icon: Wallet, color: '#8B9A7B', change: '+12%' },
+            { label: 'Active Invoices', value: stats.totalInvoices, icon: FileText, color: '#C17A47', change: '+8%' },
+            { label: 'Customers', value: stats.totalCustomers, icon: Users, color: '#B5A89A', change: '+15%' },
+            { label: 'Products', value: stats.totalProducts, icon: Package, color: '#D4A574', change: '+4%' },
           ].map((stat, i) => (
-            <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-              className="relative overflow-hidden rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-3 sm:p-4 group hover:bg-white/10 transition-all">
-              <div className="flex items-start justify-between">
-                <div className="min-w-0 flex-1">
-                  <p className="text-white/50 text-[10px] sm:text-xs font-medium uppercase tracking-wide truncate">{stat.label}</p>
-                  <p className="text-lg sm:text-2xl font-bold text-white mt-1 truncate">{stat.value}</p>
-                  <div className="flex items-center gap-1 mt-1 sm:mt-2">
-                    <TrendingUp className="w-3 h-3 text-emerald-400" />
-                    <span className="text-emerald-400 text-[10px] sm:text-xs">{stat.change}</span>
+            <motion.div 
+              key={stat.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 + i * 0.05 }}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="relative p-5 rounded-2xl bg-white border border-[#E8E0D5]/80 overflow-hidden group cursor-pointer"
+              style={{ boxShadow: '0 4px 20px -8px rgba(82,61,46,0.08)' }}
+            >
+              {/* Hover gradient */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ background: `linear-gradient(135deg, ${stat.color}05 0%, transparent 60%)` }} />
+              
+              <div className="relative flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-medium text-[#8B7355] uppercase tracking-wider mb-2">{stat.label}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-[#3A2D24]">{stat.value}</p>
+                  <div className="flex items-center gap-1 mt-2">
+                    <ArrowUp className="w-3.5 h-3.5" style={{ color: stat.color }} />
+                    <span className="text-xs font-semibold" style={{ color: stat.color }}>{stat.change}</span>
+                    <span className="text-xs text-[#A89B8C]">vs last month</span>
                   </div>
                 </div>
-                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg flex-shrink-0 ml-2`}>
-                  <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                <div 
+                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  style={{ background: `linear-gradient(135deg, ${stat.color}15 0%, ${stat.color}08 100%)` }}
+                >
+                  <stat.icon className="w-6 h-6" style={{ color: stat.color }} />
                 </div>
               </div>
-              <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient} opacity-50`} />
+              
+              {/* Bottom accent */}
+              <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: stat.color, opacity: 0.3 }} />
             </motion.div>
           ))}
         </div>
 
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 lg:gap-6">
+          
           {/* Revenue Chart */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-            className="lg:col-span-2 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-3 sm:p-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
-              <h3 className="text-white font-semibold flex items-center gap-2 text-sm sm:text-base">
-                <Activity className="w-4 h-4 text-indigo-400" /> Revenue Overview
-              </h3>
-              <div className="flex items-center gap-3 sm:gap-4 text-[10px] sm:text-xs">
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-indigo-500" /> Revenue</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-500" /> Invoices</span>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="xl:col-span-8 p-5 sm:p-6 rounded-2xl bg-white border border-[#E8E0D5]/80"
+            style={{ boxShadow: '0 4px 20px -8px rgba(82,61,46,0.08)' }}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, rgba(193,122,71,0.12) 0%, rgba(193,122,71,0.05) 100%)' }}>
+                  <Activity className="w-5 h-5 text-[#C17A47]" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-[#3A2D24]">Revenue Overview</h3>
+                  <p className="text-xs text-[#8B7355]">Monthly revenue trend</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 text-xs">
+                <span className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-[#C17A47]" />
+                  <span className="text-[#8B7355] font-medium">Revenue</span>
+                </span>
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={180}>
+            
+            <ResponsiveContainer width="100%" height={280}>
               <AreaChart data={revenueData}>
                 <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                  <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#C17A47" stopOpacity={0.25}/>
+                    <stop offset="100%" stopColor="#C17A47" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="month" stroke="rgba(255,255,255,0.3)" fontSize={10} />
-                <YAxis stroke="rgba(255,255,255,0.3)" fontSize={10} width={40} />
-                <Tooltip contentStyle={{ background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '12px' }} />
-                <Area type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
-                <Line type="monotone" dataKey="invoices" stroke="#a855f7" strokeWidth={2} dot={{ fill: '#a855f7', strokeWidth: 0, r: 3 }} />
+                <XAxis dataKey="month" stroke="#B5A89A" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis stroke="#B5A89A" fontSize={11} tickLine={false} axisLine={false} width={40} />
+                <Tooltip 
+                  contentStyle={{ 
+                    background: '#fff', 
+                    border: '1px solid #E8E0D5', 
+                    borderRadius: '12px', 
+                    boxShadow: '0 10px 30px -10px rgba(0,0,0,0.1)',
+                    fontSize: '12px'
+                  }} 
+                />
+                <Area type="monotone" dataKey="revenue" stroke="#C17A47" strokeWidth={2.5} fill="url(#revenueGrad)" 
+                  dot={{ fill: '#C17A47', r: 4, strokeWidth: 0 }}
+                  activeDot={{ r: 6, fill: '#C17A47', stroke: '#fff', strokeWidth: 2 }} />
               </AreaChart>
             </ResponsiveContainer>
           </motion.div>
 
-          {/* Pie Chart */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-            className="rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-3 sm:p-4">
-            <h3 className="text-white font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
-              <Target className="w-4 h-4 text-pink-400" /> Invoice Status
-            </h3>
-            <ResponsiveContainer width="100%" height={140}>
-              <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={40} outerRadius={55} dataKey="value" stroke="none">
-                  {pieData.map((entry, index) => (<Cell key={index} fill={entry.color} />))}
-                </Pie>
-                <Tooltip contentStyle={{ background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '12px' }} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex justify-center gap-3 sm:gap-4 mt-2">
-              {pieData.map((item) => (
-                <div key={item.name} className="flex items-center gap-1.5 text-[10px] sm:text-xs">
-                  <span className="w-2 h-2 rounded-full" style={{ background: item.color }} />
-                  <span className="text-white/60">{item.name}</span>
+          {/* Right Column */}
+          <div className="xl:col-span-4 space-y-5">
+            {/* Invoice Status */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="p-5 rounded-2xl bg-white border border-[#E8E0D5]/80"
+              style={{ boxShadow: '0 4px 20px -8px rgba(82,61,46,0.08)' }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ background: 'linear-gradient(135deg, rgba(181,168,154,0.15) 0%, rgba(181,168,154,0.05) 100%)' }}>
+                    <Target className="w-5 h-5 text-[#B5A89A]" />
+                  </div>
+                  <h3 className="font-semibold text-[#3A2D24]">Invoice Status</h3>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-center py-2">
+                <ResponsiveContainer width={150} height={150}>
+                  <PieChart>
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={65} dataKey="value" stroke="none" paddingAngle={4}>
+                      {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              
+              <div className="flex justify-center gap-4 mt-2">
+                {pieData.map((item) => (
+                  <div key={item.name} className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: item.color }} />
+                    <span className="text-xs font-medium text-[#5A4D42]">{item.name}</span>
+                    <span className="text-xs text-[#A89B8C]">({item.value})</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Quick Actions */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45 }}
+              className="p-5 rounded-2xl bg-white border border-[#E8E0D5]/80"
+              style={{ boxShadow: '0 4px 20px -8px rgba(82,61,46,0.08)' }}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, rgba(212,165,116,0.15) 0%, rgba(212,165,116,0.05) 100%)' }}>
+                  <Zap className="w-5 h-5 text-[#D4A574]" />
+                </div>
+                <h3 className="font-semibold text-[#3A2D24]">Quick Actions</h3>
+              </div>
+              
+              <div className="space-y-2">
+                {[
+                  { label: 'Create Invoice', icon: Receipt, href: '/invoices/new', color: '#C17A47' },
+                  { label: 'Add Customer', icon: UserPlus, href: '/customers', color: '#8B9A7B' },
+                  { label: 'Automations', icon: Layers, href: '/automations', color: '#D4A574' },
+                ].map((action) => (
+                  <Link key={action.label} href={action.href}>
+                    <motion.div 
+                      whileHover={{ x: 4 }}
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F8F6F3] transition-colors group cursor-pointer"
+                    >
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${action.color}12` }}>
+                        <action.icon className="w-4.5 h-4.5" style={{ color: action.color }} />
+                      </div>
+                      <span className="flex-1 text-sm font-medium text-[#5A4D42]">{action.label}</span>
+                      <ChevronRight className="w-4 h-4 text-[#B5A89A] opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </motion.div>
+                  </Link>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Bottom Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6 mt-6">
+          
+          {/* Recent Activity */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="p-5 sm:p-6 rounded-2xl bg-white border border-[#E8E0D5]/80"
+            style={{ boxShadow: '0 4px 20px -8px rgba(82,61,46,0.08)' }}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, rgba(139,154,123,0.15) 0%, rgba(139,154,123,0.05) 100%)' }}>
+                  <Clock className="w-5 h-5 text-[#8B9A7B]" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-[#3A2D24]">Recent Activity</h3>
+                  <p className="text-xs text-[#8B7355]">Latest updates</p>
+                </div>
+              </div>
+              <Link href="/invoices" className="text-xs font-semibold text-[#C17A47] flex items-center gap-1 hover:underline">
+                View All <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+            
+            <div className="space-y-3">
+              {recentActivity.map((item, i) => (
+                <motion.div 
+                  key={i}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.55 + i * 0.05 }}
+                  className="flex items-center gap-4 p-3 rounded-xl hover:bg-[#F8F6F3] transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${item.color}12` }}>
+                    <item.icon className="w-5 h-5" style={{ color: item.color }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[#3A2D24] truncate">{item.title}</p>
+                    <p className="text-xs text-[#8B7355] truncate">{item.desc}</p>
+                  </div>
+                  <span className="text-[10px] text-[#A89B8C] whitespace-nowrap">{item.time}</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Recent Invoices */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55 }}
+            className="p-5 sm:p-6 rounded-2xl bg-white border border-[#E8E0D5]/80"
+            style={{ boxShadow: '0 4px 20px -8px rgba(82,61,46,0.08)' }}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, rgba(193,122,71,0.12) 0%, rgba(193,122,71,0.05) 100%)' }}>
+                  <FileText className="w-5 h-5 text-[#C17A47]" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-[#3A2D24]">Recent Invoices</h3>
+                  <p className="text-xs text-[#8B7355]">Your latest transactions</p>
+                </div>
+              </div>
+              <Link href="/invoices" className="text-xs font-semibold text-[#C17A47] flex items-center gap-1 hover:underline">
+                View All <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+            
+            {recentInvoices.length > 0 ? (
+              <div className="space-y-3">
+                {recentInvoices.map((invoice, i) => {
+                  const status = getStatusStyle(invoice.status);
+                  return (
+                    <motion.div
+                      key={invoice._id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.6 + i * 0.05 }}
+                      className="flex items-center gap-4 p-3 rounded-xl hover:bg-[#F8F6F3] transition-colors"
+                    >
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#C17A47]/10">
+                        <Receipt className="w-5 h-5 text-[#C17A47]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-[#3A2D24] truncate">{invoice.invoiceNumber}</p>
+                        <p className="text-xs text-[#8B7355] truncate">{invoice.customer?.name || 'N/A'}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-[#3A2D24]">${invoice.totalAmount.toLocaleString()}</p>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${status.bg} ${status.text}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                          {invoice.status}
+                        </span>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-10">
+                <div className="w-14 h-14 rounded-2xl bg-[#C17A47]/8 flex items-center justify-center mx-auto mb-3">
+                  <FileText className="w-7 h-7 text-[#C17A47]/40" />
+                </div>
+                <p className="text-sm font-medium text-[#5A4D42]">No invoices yet</p>
+                <p className="text-xs text-[#8B7355] mt-1">Create your first invoice</p>
+              </div>
+            )}
+          </motion.div>
+        </div>
+
+        {/* System Status */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.65 }}
+          className="mt-6 p-4 sm:p-5 rounded-2xl bg-white/60 border border-[#E8E0D5]/60 backdrop-blur-sm"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-sm font-medium text-[#5A4D42]">All systems operational</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-6 text-xs">
+              {[
+                { label: 'API Status', status: 'Operational' },
+                { label: 'Automations', status: 'Running' },
+                { label: 'Email Service', status: 'Connected' },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-2">
+                  <span className="text-[#8B7355]">{item.label}</span>
+                  <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                    <CircleDot className="w-3 h-3" />
+                    {item.status}
+                  </span>
                 </div>
               ))}
             </div>
-          </motion.div>
-        </div>
-
-        {/* Weekly Bar Chart & Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-            className="lg:col-span-2 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-3 sm:p-4">
-            <h3 className="text-white font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
-              <Calendar className="w-4 h-4 text-emerald-400" /> Weekly Performance
-            </h3>
-            <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={weeklyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="day" stroke="rgba(255,255,255,0.3)" fontSize={10} />
-                <YAxis stroke="rgba(255,255,255,0.3)" fontSize={10} width={40} />
-                <Tooltip contentStyle={{ background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '12px' }} />
-                <Bar dataKey="amount" fill="#6366f1" radius={[4, 4, 0, 0]}>
-                  {weeklyData.map((item: { day: string; amount: number }, index: number) => (<Cell key={index} fill={COLORS[index % COLORS.length]} />))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </motion.div>
-
-          {/* Quick Actions */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-            className="rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-3 sm:p-4">
-            <h3 className="text-white font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
-              <Zap className="w-4 h-4 text-amber-400" /> Quick Actions
-            </h3>
-            <div className="space-y-2">
-              {[
-                { label: 'Create Invoice', icon: Receipt, href: '/invoices/new', gradient: 'from-indigo-500 to-purple-500' },
-                { label: 'Add Customer', icon: UserPlus, href: '/customers', gradient: 'from-pink-500 to-rose-500' },
-                { label: 'Add Product', icon: BoxIcon, href: '/products', gradient: 'from-amber-500 to-orange-500' },
-                { label: 'View Reports', icon: CreditCard, href: '/reports', gradient: 'from-emerald-500 to-teal-500' },
-              ].map((action) => (
-                <Link key={action.label} href={action.href}>
-                  <motion.div whileHover={{ x: 4 }} className="flex items-center gap-3 p-2 sm:p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
-                    <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br ${action.gradient} flex items-center justify-center`}>
-                      <action.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
-                    </div>
-                    <span className="text-white/70 text-xs sm:text-sm group-hover:text-white transition-colors">{action.label}</span>
-                    <ArrowRight className="w-4 h-4 text-white/30 ml-auto group-hover:text-white/60 transition-colors" />
-                  </motion.div>
-                </Link>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Recent Invoices */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
-          className="rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-3 sm:p-4">
-          <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <h3 className="text-white font-semibold flex items-center gap-2 text-sm sm:text-base">
-              <FileText className="w-4 h-4 text-purple-400" /> Recent Invoices
-            </h3>
-            <Link href="/invoices" className="text-indigo-400 text-xs sm:text-sm hover:text-indigo-300 flex items-center gap-1">
-              View All <ArrowUpRight className="w-3 h-3" />
-            </Link>
           </div>
-          {recentInvoices.length > 0 ? (
-            <div className="overflow-x-auto -mx-3 sm:-mx-4 px-3 sm:px-4">
-              <table className="w-full min-w-[500px]">
-                <thead>
-                  <tr className="text-white/40 text-[10px] sm:text-xs uppercase tracking-wide">
-                    <th className="text-left py-2 px-2 sm:px-3">Invoice</th>
-                    <th className="text-left py-2 px-2 sm:px-3">Customer</th>
-                    <th className="text-left py-2 px-2 sm:px-3">Amount</th>
-                    <th className="text-left py-2 px-2 sm:px-3">Status</th>
-                    <th className="text-left py-2 px-2 sm:px-3">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentInvoices.map((invoice) => (
-                    <tr key={invoice._id} className="border-t border-white/5 hover:bg-white/5 transition-colors">
-                      <td className="py-2 sm:py-3 px-2 sm:px-3 text-white text-xs sm:text-sm font-medium">{invoice.invoiceNumber}</td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-3 text-white/60 text-xs sm:text-sm">{invoice.customer?.name || 'N/A'}</td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-3 text-white text-xs sm:text-sm">${invoice.totalAmount.toLocaleString()}</td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-3">
-                        <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium capitalize border ${getStatusColor(invoice.status)}`}>
-                          {invoice.status}
-                        </span>
-                      </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-3 text-white/40 text-xs sm:text-sm">{new Date(invoice.createdAt).toLocaleDateString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-center py-6 sm:py-8">
-              <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-white/20 mx-auto mb-2" />
-              <p className="text-white/40 text-xs sm:text-sm">No invoices yet</p>
-              <Link href="/invoices/new" className="text-indigo-400 text-xs sm:text-sm hover:underline">Create your first invoice</Link>
-            </div>
-          )}
         </motion.div>
-      </motion.div>
+
+      </div>
     </div>
   );
 }
