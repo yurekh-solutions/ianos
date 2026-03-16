@@ -170,7 +170,7 @@ export default function CustomersPage() {
             <div className="space-y-3">
               {customers.slice(0, 4).map((customer, i) => (
                 <div 
-                  key={customer.id} 
+                  key={customer._id || customer.id || i} 
                   className="flex items-center gap-3 p-3 rounded-xl transition-colors hover:bg-[hsl(var(--muted))]"
                 >
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-semibold"
@@ -315,7 +315,7 @@ export default function CustomersPage() {
             ) : (
               filteredCustomers.map((customer, index) => (
                 <motion.div 
-                  key={customer.id} 
+                  key={customer._id || customer.id || index} 
                   initial={{ opacity: 0, y: 20 }} 
                   animate={{ opacity: 1, y: 0 }} 
                   transition={{ delay: index * 0.05 }}

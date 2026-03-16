@@ -24,6 +24,7 @@ export interface IInvoice {
   dueDate: Date;
   items: IInvoiceItem[];
   subtotal: number;
+  taxRate: number;
   taxTotal: number;
   totalAmount: number;
   status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
@@ -109,6 +110,10 @@ const InvoiceSchema = new mongoose.Schema<IInvoice>(
     taxTotal: {
       type: Number,
       required: true,
+    },
+    taxRate: {
+      type: Number,
+      default: 18,
     },
     totalAmount: {
       type: Number,

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Building2, Mail, Phone, MapPin, Globe, CreditCard, Save, Upload, CheckCircle2, X, Image as ImageIcon } from 'lucide-react';
+import { Building2, Mail, Phone, MapPin, Globe, CreditCard, Save, Upload, CheckCircle2, X, Image as ImageIcon, Hash, Landmark, FileText } from 'lucide-react';
 import Image from 'next/image';
 
 interface CompanyData {
@@ -11,25 +11,30 @@ interface CompanyData {
   phone: string;
   address: string;
   city: string;
+  state: string;
+  pincode: string;
   country: string;
   website: string;
-  taxId: string;
+  gstNumber: string;
+  panNumber: string;
   bankName: string;
   bankAccount: string;
-  bankRouting: string;
+  ifscCode: string;
+  accountHolder: string;
   logoUrl: string;
 }
 
 export default function CompanyPage() {
   const [company, setCompany] = useState<CompanyData>({
-    name: '', email: '', phone: '', address: '', city: '', country: '',
-    website: '', taxId: '', bankName: '', bankAccount: '', bankRouting: '', logoUrl: '',
+    name: '', email: '', phone: '', address: '', city: '', state: '', pincode: '', country: 'India',
+    website: '', gstNumber: '', panNumber: '', bankName: '', bankAccount: '', ifscCode: '', accountHolder: '', logoUrl: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => { fetchCompany(); }, []);
 
@@ -38,7 +43,9 @@ export default function CompanyPage() {
       const res = await fetch('/api/company');
       if (res.ok) {
         const data = await res.json();
-        if (data) setCompany(data);
+        if (data) {
+          setCompany({ ...company, ...data });
+        }
       }
     } catch (error) {
       console.error('Error:', error);
@@ -50,11 +57,25 @@ export default function CompanyPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    
+    // Get form data
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    const data: Partial<CompanyData> = {};
+    
+    formData.forEach((value, key) => {
+      if (key !== 'logo') {
+        (data as Record<string, string>)[key] = value as string;
+      }
+    });
+    
+    // Add logo
+    data.logoUrl = company.logoUrl;
+    
     try {
       const res = await fetch('/api/company', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(company),
+        body: JSON.stringify(data),
       });
       if (res.ok) {
         setSaved(true);
@@ -107,14 +128,76 @@ export default function CompanyPage() {
     }
   };
 
-  const InputField = ({ label, icon: Icon, ...props }: { label: string; icon: React.ElementType; [key: string]: unknown }) => (
-    <div className="space-y-1.5">
-      <label className="text-xs font-medium uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
-        <Icon className="w-3.5 h-3.5" /> {label}
-      </label>
-      <input {...props} className="w-full glass-input px-4 py-2.5 text-sm" />
-    </div>
-  );
+  // Indian states for dropdown
+  const indianStates = [
+    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 
+    'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 
+    'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 
+    'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 
+    'Uttarakhand', 'West Bengal', 'Delhi', 'Jammu & Kashmir', 'Ladakh'
+  ];
+
+  // Reusable input component with proper focus handling
+  const FormInput = ({ name, defaultValue, placeholder, type = 'text', required = false, className = '' }: { 
+    name: string; 
+    defaultValue?: string; 
+    placeholder?: string; 
+    type?: string; 
+    required?: boolean;
+    className?: string;
+  }) => {
+    const [isFocused, setIsFocused] = useState(false);
+    
+    return (
+      <input 
+        name={name}
+        type={type}
+        defaultValue={defaultValue}
+        placeholder={placeholder}
+        required={required}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        className={`w-full px-4 py-2.5 text-sm rounded-xl transition-all duration-200 ${className}`}
+        style={{
+          background: '#FFFFFF',
+          border: isFocused ? '2px solid #C17A47' : '2px solid #E8E0D5',
+          color: '#3A2D24',
+          outline: 'none',
+          boxShadow: isFocused ? '0 0 0 3px rgba(193, 122, 71, 0.15)' : 'none'
+        }}
+      />
+    );
+  };
+
+  // Reusable select component
+  const FormSelect = ({ name, defaultValue, required = false, children }: { 
+    name: string; 
+    defaultValue?: string; 
+    required?: boolean;
+    children: React.ReactNode;
+  }) => {
+    const [isFocused, setIsFocused] = useState(false);
+    
+    return (
+      <select 
+        name={name}
+        defaultValue={defaultValue}
+        required={required}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        className="w-full px-4 py-2.5 text-sm rounded-xl transition-all duration-200"
+        style={{
+          background: '#FFFFFF',
+          border: isFocused ? '2px solid #C17A47' : '2px solid #E8E0D5',
+          color: '#3A2D24',
+          outline: 'none',
+          boxShadow: isFocused ? '0 0 0 3px rgba(193, 122, 71, 0.15)' : 'none'
+        }}
+      >
+        {children}
+      </select>
+    );
+  };
 
   if (loading) {
     return (
@@ -150,7 +233,7 @@ export default function CompanyPage() {
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
           {/* Logo Upload */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }} 
@@ -224,39 +307,62 @@ export default function CompanyPage() {
             className="glass-card p-5"
           >
             <h2 className="font-semibold mb-4 flex items-center gap-2" style={{ color: 'hsl(var(--foreground))' }}>
-              <Building2 className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} /> Basic Information
+              <Building2 className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} /> Business Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField 
-                label="Company Name" 
-                icon={Building2} 
-                placeholder="Your Company Name"
-                value={company.name} 
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, name: e.target.value })} 
-              />
-              <InputField 
-                label="Email" 
-                icon={Mail} 
-                type="email" 
-                placeholder="company@example.com"
-                value={company.email} 
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, email: e.target.value })} 
-              />
-              <InputField 
-                label="Phone" 
-                icon={Phone} 
-                type="tel" 
-                placeholder="+1 234 567 890"
-                value={company.phone} 
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, phone: e.target.value })} 
-              />
-              <InputField 
-                label="Website" 
-                icon={Globe} 
-                placeholder="https://yourcompany.com"
-                value={company.website} 
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, website: e.target.value })} 
-              />
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <Building2 className="w-3.5 h-3.5" /> Business Name *
+                </label>
+                <FormInput name="name" defaultValue={company.name} placeholder="e.g., Raj Enterprises" required />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <Mail className="w-3.5 h-3.5" /> Email
+                </label>
+                <FormInput name="email" type="email" defaultValue={company.email} placeholder="company@gmail.com" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <Phone className="w-3.5 h-3.5" /> Phone *
+                </label>
+                <FormInput name="phone" type="tel" defaultValue={company.phone} placeholder="9876543210" required />
+                <p className="text-[10px] text-[#8B7355]">Enter 10 digit mobile number</p>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <Globe className="w-3.5 h-3.5" /> Website
+                </label>
+                <FormInput name="website" defaultValue={company.website} placeholder="www.yourcompany.com" />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* GST & Tax Info */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.25 }}
+            className="glass-card p-5"
+          >
+            <h2 className="font-semibold mb-4 flex items-center gap-2" style={{ color: 'hsl(var(--foreground))' }}>
+              <FileText className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} /> GST & Tax Information
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <Hash className="w-3.5 h-3.5" /> GST Number
+                </label>
+                <FormInput name="gstNumber" defaultValue={company.gstNumber} placeholder="22AAAAA0000A1Z5" className="uppercase" />
+                <p className="text-[10px] text-[#8B7355]">15 digit GSTIN</p>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <CreditCard className="w-3.5 h-3.5" /> PAN Number
+                </label>
+                <FormInput name="panNumber" defaultValue={company.panNumber} placeholder="AAAAA0000A" className="uppercase" />
+                <p className="text-[10px] text-[#8B7355]">10 digit PAN</p>
+              </div>
             </div>
           </motion.div>
 
@@ -268,36 +374,49 @@ export default function CompanyPage() {
             className="glass-card p-5"
           >
             <h2 className="font-semibold mb-4 flex items-center gap-2" style={{ color: 'hsl(var(--foreground))' }}>
-              <MapPin className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} /> Address
+              <MapPin className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} /> Business Address
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <InputField 
-                  label="Street Address" 
-                  icon={MapPin} 
-                  placeholder="123 Business Street"
-                  value={company.address} 
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, address: e.target.value })} 
-                />
+              <div className="md:col-span-2 space-y-1.5">
+                <label className="text-xs font-medium uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <MapPin className="w-3.5 h-3.5" /> Street Address *
+                </label>
+                <FormInput name="address" defaultValue={company.address} placeholder="Shop No. 12, Main Market Road" required />
               </div>
-              <InputField 
-                label="City" 
-                icon={MapPin} 
-                placeholder="New York"
-                value={company.city} 
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, city: e.target.value })} 
-              />
-              <InputField 
-                label="Country" 
-                icon={Globe} 
-                placeholder="United States"
-                value={company.country} 
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, country: e.target.value })} 
-              />
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <MapPin className="w-3.5 h-3.5" /> City *
+                </label>
+                <FormInput name="city" defaultValue={company.city} placeholder="Mumbai" required />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <MapPin className="w-3.5 h-3.5" /> State *
+                </label>
+                <FormSelect name="state" defaultValue={company.state} required>
+                  <option value="">Select State</option>
+                  {indianStates.map(state => (
+                    <option key={state} value={state}>{state}</option>
+                  ))}
+                </FormSelect>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <MapPin className="w-3.5 h-3.5" /> PIN Code *
+                </label>
+                <FormInput name="pincode" defaultValue={company.pincode} placeholder="400001" required />
+                <p className="text-[10px] text-[#8B7355]">6 digit code</p>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <Globe className="w-3.5 h-3.5" /> Country
+                </label>
+                <FormInput name="country" defaultValue={company.country || 'India'} placeholder="India" />
+              </div>
             </div>
           </motion.div>
 
-          {/* Tax & Banking */}
+          {/* Bank Details */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }} 
             animate={{ opacity: 1, y: 0 }} 
@@ -305,37 +424,34 @@ export default function CompanyPage() {
             className="glass-card p-5"
           >
             <h2 className="font-semibold mb-4 flex items-center gap-2" style={{ color: 'hsl(var(--foreground))' }}>
-              <CreditCard className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} /> Tax & Banking
+              <Landmark className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} /> Bank Account Details
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField 
-                label="Tax ID / VAT Number" 
-                icon={CreditCard} 
-                placeholder="XX-XXXXXXX"
-                value={company.taxId} 
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, taxId: e.target.value })} 
-              />
-              <InputField 
-                label="Bank Name" 
-                icon={Building2} 
-                placeholder="Bank of America"
-                value={company.bankName} 
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, bankName: e.target.value })} 
-              />
-              <InputField 
-                label="Account Number" 
-                icon={CreditCard} 
-                placeholder="XXXX-XXXX-XXXX"
-                value={company.bankAccount} 
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, bankAccount: e.target.value })} 
-              />
-              <InputField 
-                label="Routing Number" 
-                icon={CreditCard} 
-                placeholder="XXXXXXXXX"
-                value={company.bankRouting} 
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany({ ...company, bankRouting: e.target.value })} 
-              />
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <Building2 className="w-3.5 h-3.5" /> Account Holder
+                </label>
+                <FormInput name="accountHolder" defaultValue={company.accountHolder} placeholder="Name as per bank" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <Landmark className="w-3.5 h-3.5" /> Bank Name
+                </label>
+                <FormInput name="bankName" defaultValue={company.bankName} placeholder="e.g., State Bank of India" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <CreditCard className="w-3.5 h-3.5" /> Account Number
+                </label>
+                <FormInput name="bankAccount" defaultValue={company.bankAccount} placeholder="Your account number" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <Hash className="w-3.5 h-3.5" /> IFSC Code
+                </label>
+                <FormInput name="ifscCode" defaultValue={company.ifscCode} placeholder="SBIN0001234" className="uppercase" />
+                <p className="text-[10px] text-[#8B7355]">11 characters</p>
+              </div>
             </div>
           </motion.div>
 

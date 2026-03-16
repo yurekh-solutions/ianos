@@ -207,7 +207,7 @@ export default function DashboardPage() {
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-8">
           {[
-            { label: 'Total Revenue', value: `$${stats.totalRevenue.toLocaleString()}`, icon: Wallet, color: '#8B9A7B', change: '+12%' },
+            { label: 'Total Revenue', value: `₹${stats.totalRevenue.toLocaleString()}`, icon: Wallet, color: '#8B9A7B', change: '+12%' },
             { label: 'Active Invoices', value: stats.totalInvoices, icon: FileText, color: '#C17A47', change: '+8%' },
             { label: 'Customers', value: stats.totalCustomers, icon: Users, color: '#B5A89A', change: '+15%' },
             { label: 'Products', value: stats.totalProducts, icon: Package, color: '#D4A574', change: '+4%' },
@@ -479,7 +479,7 @@ export default function DashboardPage() {
                         <p className="text-xs text-[#8B7355] truncate">{invoice.customer?.name || 'N/A'}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold text-[#3A2D24]">${invoice.totalAmount.toLocaleString()}</p>
+                        <p className="text-sm font-bold text-[#3A2D24]">₹{invoice.totalAmount?.toLocaleString() || '0'}</p>
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${status.bg} ${status.text}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
                           {invoice.status}

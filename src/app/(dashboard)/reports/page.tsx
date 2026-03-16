@@ -2,20 +2,38 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, TrendingUp, DollarSign, FileText, Users, Download, Calendar, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { BarChart3, TrendingUp, IndianRupee, FileText, Users, Download, Calendar, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 
 interface Invoice {
+  _id: string;
   status: string;
   totalAmount: number;
   createdAt: string;
+  customerId?: string;
   customer?: { name: string };
+  customerName?: string;
 }
 
 interface Customer {
   _id: string;
   name: string;
 }
+
+// Format currency in Indian Rupees
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
+// Format number with Indian comma system
+const formatNumber = (num: number) => {
+  return new Intl.NumberFormat('en-IN').format(num);
+};
 
 export default function ReportsPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -43,6 +61,27 @@ export default function ReportsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Create customer lookup map
+  const customerMap = customers.reduce((acc: Record<string, string>, customer) => {
+    acc[customer._id] = customer.name;
+    return acc;
+  }, {});
+
+  // Helper to get customer name
+  const getCustomerName = (invoice: Invoice): string => {
+    // Try multiple sources for customer name
+    if (invoice.customer?.name && invoice.customer.name !== 'Unknown') {
+      return invoice.customer.name;
+    }
+    if (invoice.customerName && invoice.customerName !== 'Unknown') {
+      return invoice.customerName;
+    }
+    if (invoice.customerId && customerMap[invoice.customerId]) {
+      return customerMap[invoice.customerId];
+    }
+    return 'Walk-in Customer';
   };
 
   // Calculate real stats
@@ -86,21 +125,22 @@ export default function ReportsPage() {
 
   // Top customers by revenue
   const customerRevenue = invoices.reduce((acc: Record<string, { name: string; revenue: number; invoices: number }>, inv) => {
-    const name = inv.customer?.name || 'Unknown';
+    const name = getCustomerName(inv);
     if (!acc[name]) acc[name] = { name, revenue: 0, invoices: 0 };
     acc[name].revenue += inv.totalAmount || 0;
     acc[name].invoices += 1;
     return acc;
   }, {});
+  
   const topCustomers = Object.values(customerRevenue)
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 5);
 
   const stats = [
-    { label: 'Total Revenue', value: `$${totalRevenue.toLocaleString()}`, change: '+12.5%', up: true, icon: DollarSign, gradient: 'from-emerald-500 to-teal-600', bgGlow: 'bg-emerald-500/10' },
-    { label: 'Total Invoices', value: invoices.length.toString(), change: '+8.2%', up: true, icon: FileText, gradient: 'from-violet-500 to-purple-600', bgGlow: 'bg-violet-500/10' },
-    { label: 'Active Customers', value: customers.length.toString(), change: '+15.3%', up: true, icon: Users, gradient: 'from-rose-500 to-pink-600', bgGlow: 'bg-rose-500/10' },
-    { label: 'Avg Invoice', value: `$${avgInvoice}`, change: '-2.4%', up: false, icon: BarChart3, gradient: 'from-amber-500 to-orange-600', bgGlow: 'bg-amber-500/10' },
+    { label: 'Total Revenue', value: formatCurrency(totalRevenue), change: '+12.5%', up: true, icon: IndianRupee, gradient: 'from-emerald-500 to-teal-600', bgGlow: 'bg-emerald-500/10' },
+    { label: 'Total Invoices', value: formatNumber(invoices.length), change: '+8.2%', up: true, icon: FileText, gradient: 'from-violet-500 to-purple-600', bgGlow: 'bg-violet-500/10' },
+    { label: 'Active Customers', value: formatNumber(customers.length), change: '+15.3%', up: true, icon: Users, gradient: 'from-rose-500 to-pink-600', bgGlow: 'bg-rose-500/10' },
+    { label: 'Avg Invoice', value: formatCurrency(avgInvoice), change: '-2.4%', up: false, icon: BarChart3, gradient: 'from-amber-500 to-orange-600', bgGlow: 'bg-amber-500/10' },
   ];
 
   if (loading) {
@@ -181,11 +221,10 @@ export default function ReportsPage() {
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold flex items-center gap-2" style={{ color: 'hsl(var(--foreground))' }}>
-                <TrendingUp className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} /> Revenue vs Expenses
+                <TrendingUp className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} /> Revenue Trend
               </h3>
               <div className="flex items-center gap-4 text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Revenue</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> Expenses</span>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={250}>
@@ -195,15 +234,16 @@ export default function ReportsPage() {
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
                     <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                   </linearGradient>
-                  <linearGradient id="colorExp" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
-                  </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" />
                 <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <YAxis 
+                  stroke="hsl(var(--muted-foreground))" 
+                  fontSize={11} 
+                  tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}K`}
+                />
                 <Tooltip 
+                  formatter={(value: number) => [formatCurrency(value), 'Revenue']}
                   contentStyle={{ 
                     background: 'hsl(var(--card-bg))', 
                     border: '1px solid hsl(var(--border) / 0.5)', 
@@ -212,7 +252,6 @@ export default function ReportsPage() {
                   }} 
                 />
                 <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorRev)" />
-                <Area type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorExp)" />
               </AreaChart>
             </ResponsiveContainer>
           </motion.div>
@@ -304,7 +343,7 @@ export default function ReportsPage() {
                     <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>{customer.name}</p>
                     <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{customer.invoices} invoices</p>
                   </div>
-                  <span className="font-medium text-sm" style={{ color: 'hsl(var(--foreground))' }}>${customer.revenue.toLocaleString()}</span>
+                  <span className="font-medium text-sm" style={{ color: 'hsl(var(--foreground))' }}>{formatCurrency(customer.revenue)}</span>
                 </div>
               ))}
               {topCustomers.length === 0 && (

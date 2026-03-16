@@ -4,7 +4,6 @@ import connectDB from '@/lib/mongodb';
 import Invoice from '@/models/Invoice';
 import User from '@/models/User';
 import Customer from '@/models/Customer';
-import Product from '@/models/Product';
 
 export async function GET(req: NextRequest) {
   try {
@@ -17,7 +16,7 @@ export async function GET(req: NextRequest) {
     
     const user = await User.findOne({ email: session.user.email });
     if (!user?.companyId) {
-      return NextResponse.json({ error: 'Company not found' }, { status: 404 });
+      return NextResponse.json([]);
     }
 
     const invoices = await Invoice.find({ companyId: user.companyId })
@@ -46,60 +45,63 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     
-    // Get customer details
-    const customer = await Customer.findById(body.customerId);
+    // Find or create customer
+    let customer = await Customer.findOne({ 
+      companyId: user.companyId,
+      email: body.customerEmail 
+    });
+    
     if (!customer) {
-      return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
+      customer = await Customer.create({
+        companyId: user.companyId,
+        name: body.customerName,
+        email: body.customerEmail,
+        createdBy: user._id.toString(),
+      });
     }
 
-    // Calculate invoice items with totals
-    const items = await Promise.all(
-      body.items.map(async (item: { productId: string; quantity: number }) => {
-        const product = await Product.findById(item.productId);
-        if (!product) throw new Error(`Product not found: ${item.productId}`);
-        
-        const taxAmount = (product.price * item.quantity * product.taxRate) / 100;
-        const total = product.price * item.quantity + taxAmount;
-        
-        return {
-          productId: product._id.toString(),
-          productName: product.name,
-          description: product.description,
-          quantity: item.quantity,
-          price: product.price,
-          taxRate: product.taxRate,
-          taxAmount,
-          total,
-        };
-      })
-    );
+    // Calculate invoice items with custom GST rate
+    const GST_RATE = body.gstRate || 18;
+    const items = body.items.map((item: { productName: string; description: string; quantity: number; price: number }) => {
+      const itemSubtotal = item.price * item.quantity;
+      const taxAmount = (itemSubtotal * GST_RATE) / 100;
+      const total = itemSubtotal + taxAmount;
+      
+      return {
+        productId: 'manual-' + Date.now(),
+        productName: item.productName || item.description || 'Item',
+        description: item.description || item.productName || 'Item',
+        quantity: item.quantity,
+        price: item.price,
+        taxRate: GST_RATE,
+        taxAmount,
+        total,
+      };
+    });
 
-    const subtotal = items.reduce((sum: number, item: { total: number; taxAmount: number }) => 
-      sum + item.total - item.taxAmount, 0);
+    const subtotal = items.reduce((sum: number, item: { price: number; quantity: number }) => 
+      sum + (item.price * item.quantity), 0);
     const taxTotal = items.reduce((sum: number, item: { taxAmount: number }) => sum + item.taxAmount, 0);
     const totalAmount = subtotal + taxTotal;
 
     // Generate invoice number
     const invoiceCount = await Invoice.countDocuments({ companyId: user.companyId });
-    const invoiceNumber = `INV-${Date.now().toString(36).toUpperCase()}-${(invoiceCount + 1).toString().padStart(4, '0')}`;
+    const invoiceNumber = `INV-${String(invoiceCount + 1).padStart(4, '0')}`;
 
     const invoice = await Invoice.create({
       companyId: user.companyId,
       customerId: customer._id.toString(),
-      customerName: customer.name,
-      customerEmail: customer.email,
-      customerAddress: customer.address,
-      customerGstNumber: customer.gstNumber,
+      customerName: body.customerName,
+      customerEmail: body.customerEmail,
       invoiceNumber,
-      invoiceDate: new Date(body.invoiceDate),
-      dueDate: new Date(body.dueDate),
+      invoiceDate: new Date(),
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
       items,
       subtotal,
       taxTotal,
       totalAmount,
+      taxRate: GST_RATE,
       status: 'draft',
-      notes: body.notes,
-      terms: body.terms,
       createdBy: user._id.toString(),
     });
 
