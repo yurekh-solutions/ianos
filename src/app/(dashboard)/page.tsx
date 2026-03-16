@@ -34,6 +34,20 @@ interface Invoice {
   customer?: { name: string };
 }
 
+interface Customer {
+  _id: string;
+  name: string;
+  createdAt: string;
+}
+
+interface ActivityItem {
+  icon: React.ElementType;
+  title: string;
+  desc: string;
+  time: string;
+  color: string;
+}
+
 export default function DashboardPage() {
   const { data: session } = useSession();
   const [stats, setStats] = useState<DashboardStats>({
@@ -42,6 +56,7 @@ export default function DashboardPage() {
   });
   const [recentInvoices, setRecentInvoices] = useState<Invoice[]>([]);
   const [allInvoices, setAllInvoices] = useState<Invoice[]>([]);
+  const [recentCustomers, setRecentCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { fetchStats(); }, []);
@@ -52,7 +67,7 @@ export default function DashboardPage() {
         fetch('/api/invoices'), fetch('/api/customers'), fetch('/api/products'),
       ]);
       const invoices: Invoice[] = invoicesRes.ok ? await invoicesRes.json() : [];
-      const customers = customersRes.ok ? await customersRes.json() : [];
+      const customers: Customer[] = customersRes.ok ? await customersRes.json() : [];
       const products = productsRes.ok ? await productsRes.json() : [];
       const revenue = invoices.filter((inv) => inv.status === 'paid')
         .reduce((sum, inv) => sum + inv.totalAmount, 0);
@@ -62,8 +77,11 @@ export default function DashboardPage() {
         pendingInvoices: invoices.filter((inv) => inv.status === 'pending').length,
         paidInvoices: invoices.filter((inv) => inv.status === 'paid').length,
       });
-      setRecentInvoices(invoices.slice(0, 4));
-      setAllInvoices(invoices);
+      // Sort by createdAt descending and take most recent
+      const sortedInvoices = invoices.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setRecentInvoices(sortedInvoices.slice(0, 4));
+      setAllInvoices(sortedInvoices);
+      setRecentCustomers(customers.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3));
     } catch (error) { console.error('Error:', error); }
     finally { setLoading(false); }
   };
@@ -102,12 +120,75 @@ export default function DashboardPage() {
     return styles[status] || { bg: 'bg-gray-50', text: 'text-gray-600', dot: 'bg-gray-400' };
   };
 
-  const recentActivity = [
-    { icon: Receipt, title: 'New invoice created', desc: 'Invoice #INV-001 for $1,250', time: '2 min ago', color: '#C17A47' },
-    { icon: Wallet, title: 'Payment received', desc: '$850 from John Smith', time: '1 hour ago', color: '#8B9A7B' },
-    { icon: UserPlus, title: 'New customer added', desc: 'Sarah Johnson joined', time: '3 hours ago', color: '#B5A89A' },
-    { icon: Zap, title: 'Automation triggered', desc: 'Invoice reminder sent', time: '5 hours ago', color: '#D4A574' },
-  ];
+  // Generate real activity data from invoices and customers
+  const generateRecentActivity = (): ActivityItem[] => {
+    const activities: ActivityItem[] = [];
+    
+    // Add recent invoices
+    recentInvoices.slice(0, 2).forEach((inv) => {
+      activities.push({
+        icon: Receipt,
+        title: 'New invoice created',
+        desc: `Invoice ${inv.invoiceNumber} for ₹${inv.totalAmount?.toLocaleString('en-IN') || '0'}`,
+        time: getTimeAgo(inv.createdAt),
+        color: '#C17A47',
+      });
+    });
+    
+    // Add paid invoices as payment received
+    const paidInvoices = allInvoices.filter(inv => inv.status === 'paid').slice(0, 2);
+    paidInvoices.forEach((inv) => {
+      activities.push({
+        icon: Wallet,
+        title: 'Payment received',
+        desc: `₹${inv.totalAmount?.toLocaleString('en-IN') || '0'} from ${inv.customerName || 'Customer'}`,
+        time: getTimeAgo(inv.createdAt),
+        color: '#8B9A7B',
+      });
+    });
+    
+    // Add recent customers
+    recentCustomers.slice(0, 2).forEach((cust) => {
+      activities.push({
+        icon: UserPlus,
+        title: 'New customer added',
+        desc: `${cust.name} joined`,
+        time: getTimeAgo(cust.createdAt),
+        color: '#B5A89A',
+      });
+    });
+    
+    // If no real data, show welcome message
+    if (activities.length === 0) {
+      activities.push({
+        icon: Sparkles,
+        title: 'Welcome to AIONS',
+        desc: 'Start by creating your first invoice',
+        time: 'Just now',
+        color: '#C17A47',
+      });
+    }
+    
+    return activities.slice(0, 4);
+  };
+
+  // Helper to format time ago
+  const getTimeAgo = (dateString: string): string => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (seconds < 60) return 'Just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} min ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString('en-IN');
+  };
+
+  const recentActivity = generateRecentActivity();
 
   if (loading) {
     return (
