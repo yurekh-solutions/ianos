@@ -243,7 +243,7 @@ export default function ReportsPage() {
                   tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}K`}
                 />
                 <Tooltip 
-                  formatter={(value: number) => [formatCurrency(value), 'Revenue']}
+                  formatter={(value) => [formatCurrency(Number(value)), 'Revenue']}
                   contentStyle={{ 
                     background: 'hsl(var(--card-bg))', 
                     border: '1px solid hsl(var(--border) / 0.5)', 
