@@ -1,16 +1,23 @@
 import { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
-const SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key-at-least-32-characters-long';
+// Use the same secret as NextAuth - must match NEXTAUTH_SECRET env var
+const SECRET = process.env.NEXTAUTH_SECRET;
 
 export async function getServerSession(req: NextRequest) {
   try {
+    if (!SECRET) {
+      console.error('NEXTAUTH_SECRET is not set!');
+      return null;
+    }
+    
     const token = await getToken({ 
       req,
       secret: SECRET
     });
     
     if (!token?.email) {
+      console.log('No valid token found');
       return null;
     }
     
