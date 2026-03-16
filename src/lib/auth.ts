@@ -11,13 +11,15 @@ export async function getServerSession(req: NextRequest) {
       return null;
     }
     
+    // getToken automatically reads the next-auth.session-token cookie
     const token = await getToken({ 
       req,
-      secret: SECRET
+      secret: SECRET,
+      cookieName: 'next-auth.session-token'
     });
     
     if (!token?.email) {
-      console.log('No valid token found');
+      console.log('No valid token found in cookie');
       return null;
     }
     
