@@ -331,48 +331,56 @@ export default function InvoicesPage() {
             {!company?.name ? (
               <Link
                 href="/company"
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl text-white text-sm font-medium transition-all shadow-lg animate-pulse"
+                className="group relative inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl text-white text-sm font-medium transition-all shadow-lg overflow-hidden"
                 style={{ 
                   background: 'linear-gradient(135deg, #C17A47, #8B5A3C)',
                   boxShadow: '0 10px 30px -10px rgba(193, 122, 71, 0.6)'
                 }}
               >
-                <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span>Setup Company Profile First</span>
+                {/* Animated shimmer effect */}
+                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+                {/* Pulsing dot */}
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                </span>
+                <Building2 className="w-4 h-4 sm:w-5 sm:h-5 relative z-10" />
+                <span className="relative z-10">Setup Company Profile First</span>
               </Link>
             ) : (
               <Link
                 href="/company"
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl text-sm font-medium transition-all border-2"
+                className="group inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl text-sm font-medium transition-all border-2 hover:bg-[#C17A47]/5"
                 style={{ 
                   borderColor: 'hsl(var(--primary))',
                   color: 'hsl(var(--primary))',
                   background: 'transparent'
                 }}
               >
-                <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Building2 className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:scale-110" />
                 <span>Company Profile</span>
               </Link>
             )}
             {company?.name ? (
               <Link
                 href="/invoices/new"
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl text-white text-sm font-medium transition-all shadow-lg active:scale-95"
+                className="group inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl text-white text-sm font-medium transition-all shadow-lg active:scale-95 hover:shadow-xl"
                 style={{ 
                   background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)))',
                   boxShadow: '0 10px 30px -10px hsl(var(--primary) / 0.4)'
                 }}
               >
-                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:rotate-90" />
                 <span>New Invoice</span>
               </Link>
             ) : (
               <button
                 disabled
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl text-white text-sm font-medium transition-all opacity-50 cursor-not-allowed"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl text-sm font-medium transition-all opacity-50 cursor-not-allowed border-2 border-dashed"
                 style={{ 
-                  background: 'hsl(var(--muted))',
-                  color: 'hsl(var(--muted-foreground))'
+                  borderColor: 'hsl(var(--muted))',
+                  color: 'hsl(var(--muted-foreground))',
+                  background: 'transparent'
                 }}
                 title="Please setup Company Profile first"
               >
