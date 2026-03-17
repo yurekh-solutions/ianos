@@ -208,7 +208,8 @@ export default function InvoicesPage() {
     
     // Items Table Header
     const tableY = 130;
-    const hasTax = (invoice.taxRate || 0) > 0;
+    const hasTax = (invoice.taxRate || invoice.items[0]?.taxRate || 0) > 0;
+    const displayTaxRate = invoice.taxRate || invoice.items[0]?.taxRate || 0;
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.roundedRect(15, tableY, 180, 12, 2, 2, 'F');
     
@@ -262,7 +263,7 @@ export default function InvoicesPage() {
     doc.text(actualSubtotal.toFixed(2), 185, totalsY + 12, { align: 'right' });
     
     if (hasTax) {
-      doc.text(`GST (${invoice.taxRate}%):`, 115, totalsY + 22);
+      doc.text(`GST (${displayTaxRate}%):`, 115, totalsY + 22);
       doc.text(actualTaxTotal.toFixed(2), 185, totalsY + 22, { align: 'right' });
     }
     

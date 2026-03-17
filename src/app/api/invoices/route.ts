@@ -73,10 +73,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Calculate invoice items with custom GST rate
-    const GST_RATE = body.gstRate || 18;
+    // Use provided GST rate (can be 0 for no tax), default to 18 only if undefined/null
+    const GST_RATE = body.gstRate !== undefined && body.gstRate !== null ? body.gstRate : 18;
     const items = body.items.map((item: { productName: string; description: string; quantity: number; price: number }) => {
       const itemSubtotal = item.price * item.quantity;
-      const taxAmount = (itemSubtotal * GST_RATE) / 100;
+      const taxAmount = GST_RATE > 0 ? (itemSubtotal * GST_RATE) / 100 : 0;
       const total = itemSubtotal + taxAmount;
       
       return {
