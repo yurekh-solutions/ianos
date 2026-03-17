@@ -104,23 +104,34 @@ export default function InvoicesPage() {
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
+    let headerY = 15;
+    
+    // Company Logo - if available
+    if (company?.logoUrl) {
+      try {
+        doc.addImage(company.logoUrl, 'JPEG', margin, 10, 30, 25);
+        headerY = 40; // Move company name down if logo exists
+      } catch {
+        // If logo fails, just show company name
+      }
+    }
     
     // Clean minimalist design - no heavy colors
     // Header with simple line
     doc.setDrawColor(200, 200, 200);
-    doc.line(margin, 45, pageWidth - margin, 45);
+    doc.line(margin, headerY + 10, pageWidth - margin, headerY + 10);
     
     // Company Name - Large and bold on left
-    doc.setFontSize(24);
+    doc.setFontSize(22);
     doc.setTextColor(50, 50, 50);
     doc.setFont('helvetica', 'bold');
-    doc.text(company?.name?.substring(0, 25) || 'AIONS', margin, 25);
+    doc.text(company?.name?.substring(0, 25) || 'AIONS', margin, headerY);
     
     // Company details below name
     doc.setFontSize(9);
     doc.setTextColor(100, 100, 100);
     doc.setFont('helvetica', 'normal');
-    let companyY = 35;
+    let companyY = headerY + 15;
     if (company?.address) {
       doc.text(company.address, margin, companyY);
       companyY += 5;
@@ -137,7 +148,7 @@ export default function InvoicesPage() {
     doc.setFontSize(28);
     doc.setTextColor(200, 200, 200);
     doc.setFont('helvetica', 'bold');
-    doc.text('INVOICE', pageWidth - margin, 30, { align: 'right' });
+    doc.text('INVOICE', pageWidth - margin, headerY, { align: 'right' });
     
     // Invoice details - simple list on right
     doc.setFontSize(10);
@@ -192,13 +203,14 @@ export default function InvoicesPage() {
     doc.setFontSize(9);
     doc.setTextColor(50, 50, 50);
     doc.setFont('helvetica', 'bold');
-    doc.text('Item', margin + 5, tableY + 7);
-    doc.text('Qty', 100, tableY + 7);
-    doc.text('Rate', 125, tableY + 7);
+    doc.text('No.', margin + 5, tableY + 7);
+    doc.text('Item', margin + 20, tableY + 7);
+    doc.text('Qty', 95, tableY + 7);
+    doc.text('Rate', 115, tableY + 7);
     if (hasTax) {
-      doc.text('Tax', 150, tableY + 7);
+      doc.text('Tax', 140, tableY + 7);
     }
-    doc.text('Amount', hasTax ? 175 : 165, tableY + 7, { align: 'right' });
+    doc.text('Amount', hasTax ? 170 : 160, tableY + 7, { align: 'right' });
     
     // Table header bottom line
     doc.setDrawColor(200, 200, 200);
@@ -209,14 +221,15 @@ export default function InvoicesPage() {
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(60, 60, 60);
     invoice.items.forEach((item, index) => {
-      doc.text(item.description || 'Item', margin + 5, y);
-      doc.text(item.quantity.toString(), 100, y);
-      doc.text(item.price.toFixed(2), 125, y);
+      doc.text((index + 1).toString(), margin + 5, y);
+      doc.text(item.description || 'Item', margin + 20, y);
+      doc.text(item.quantity.toString(), 95, y);
+      doc.text(item.price.toFixed(2), 115, y);
       if (hasTax) {
-        doc.text(item.taxAmount.toFixed(2), 150, y);
+        doc.text(item.taxAmount.toFixed(2), 140, y);
       }
       doc.setFont('helvetica', 'bold');
-      doc.text(item.total.toFixed(2), hasTax ? 175 : 165, y, { align: 'right' });
+      doc.text(item.total.toFixed(2), hasTax ? 170 : 160, y, { align: 'right' });
       doc.setFont('helvetica', 'normal');
       y += 10;
     });
